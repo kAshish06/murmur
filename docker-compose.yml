@@ -1,0 +1,39 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  server:
+    # Build the image for this service using the Dockerfile in the ./server directory
+    build: ./server
+
+    # Map ports: HOST_PORT:CONTAINER_PORT
+    # These variables (${EXTERNAL_PORT} and ${PORT}) MUST be defined
+    # in a .env file in the same directory as this docker-compose.yml file.
+    ports:
+      - "${EXTERNAL_PORT}:${PORT}"
+
+    # Load environment variables into the container's runtime environment
+    # These variables are needed by your Node.js application inside the container
+    # This file should be located in your ./server directory
+    env_file:
+      - ./server/.env.production
+
+    # Always restart the container unless it's stopped manually
+    restart: unless-stopped
+
+    # Optional: Define volumes for persistent data like logs
+    # volumes:
+    #   - server_logs:/app/logs # Mount a named volume to /app/logs inside the container
+
+    # Optional: Healthcheck to ensure the service is healthy
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:${PORT}/health"] # Adjust endpoint if needed
+    #   interval: 1m30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s # Time to wait before starting healthchecks
+
+# Define named volumes if used
+volumes:
+  server_logs:
+    driver: local # Use a local driver for simple storage on the host

@@ -3,6 +3,12 @@
 /* === Minimal Reset (on top of Tailwind v4's preflight) === */
 
 /* Box sizing rules */
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
 *,
 *::before,
 *::after {

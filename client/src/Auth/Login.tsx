@@ -1,9 +1,10 @@
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "../components/atoms/Button";
 import { useLoginMutation } from "./query/authQuery";
 import { type LoginPayload, type RegisterAndLoginResponse } from "./types";
 import RotatingArrowLoader from "../components/customUtils/RotatingArrowLoader";
+import InputField from "../components/atoms/InputField";
 
 type Props = {
   onRegisterClick: (modal: "login" | "register") => void;
@@ -12,7 +13,6 @@ type Props = {
 };
 
 type LoginForm = {
-  name: string;
   email?: string;
   phone?: string;
   countryCode?: string;
@@ -26,7 +26,11 @@ export default function Login({ onRegisterClick, onSuccess, onError }: Props) {
     register,
     handleSubmit,
     formState: { errors },
+    setFocus,
   } = useForm<LoginForm>();
+  useEffect(() => {
+    setFocus(loginMethod);
+  }, [setFocus, loginMethod]);
 
   const onSubmit = async (data: LoginForm) => {
     console.log("Login Data:", data);
@@ -69,79 +73,70 @@ export default function Login({ onRegisterClick, onSuccess, onError }: Props) {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {loginMethod === "email" ? (
-            <div>
-              <label className="block text-sm font-medium mb-1" htmlFor="email">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                {...register("email", { required: true })}
-                className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              {errors.email && (
-                <p className="text-sm text-red-500 mt-1">Email is required</p>
-              )}
-            </div>
+            <InputField
+              label="Email"
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              registration={register("email", {
+                required: loginMethod === "email" ? "Email is required" : false,
+                pattern: {
+                  value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/i,
+                  message: "Invalid email address",
+                },
+              })}
+              error={errors.email}
+            />
           ) : (
             <div className="flex gap-2">
               <div className="w-1/3">
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="countryCode"
-                >
-                  Code
-                </label>
-                <input
+                <InputField
+                  label="Code"
                   id="countryCode"
                   type="text"
                   placeholder="+91"
-                  {...register("countryCode", { required: true })}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                  registration={register("countryCode", {
+                    required:
+                      loginMethod === "phone"
+                        ? "Country Code is required"
+                        : false,
+                  })}
+                  error={errors.countryCode}
+                  inputClassName="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
               <div className="w-2/3">
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="phone"
-                >
-                  Phone
-                </label>
-                <input
+                <InputField
+                  label="Phone"
                   id="phone"
-                  type="text"
+                  type="tel"
                   placeholder="9876543210"
-                  {...register("phone", { required: true })}
-                  className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                  registration={register("phone", {
+                    required:
+                      loginMethod === "phone"
+                        ? "Phone number is required"
+                        : false,
+                    pattern: {
+                      value: /^[0-9]{7,15}$/,
+                      message: "Invalid phone number format (7-15 digits)",
+                    },
+                  })}
+                  error={errors.phone}
                 />
               </div>
-              {(errors.phone || errors.countryCode) && (
-                <p className="text-sm text-red-500 mt-1">
-                  Phone and country code are required
-                </p>
-              )}
             </div>
           )}
 
-          <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              htmlFor="password"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register("password", { required: true })}
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-            />
-            {errors.password && (
-              <p className="text-sm text-red-500 mt-1">Password is required</p>
-            )}
-          </div>
+          <InputField
+            label="Password"
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            registration={register("password", {
+              required: "Password is required",
+            })}
+            error={errors.password}
+          />
 
           <Button
             type="submit"

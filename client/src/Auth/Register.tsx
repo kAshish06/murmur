@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Button from "../components/atoms/Button";
 import { useRegisterUserMutation } from "./query/authQuery";
 import type { RegisterUserPayload, RegisterAndLoginResponse } from "./types";
 import RotatingArrowLoader from "../components/customUtils/RotatingArrowLoader";
+import InputField from "../components/atoms/InputField";
 
 type Props = {
   onLoginClick: (modal: "login" | "register") => void;
@@ -18,15 +19,21 @@ export default function Register({ onLoginClick, onSuccess, onError }: Props) {
     register,
     handleSubmit,
     formState: { errors },
+    setFocus,
   } = useForm<RegisterUserPayload>();
   const registerUserMutation = useRegisterUserMutation(onSuccess, onError);
+  useEffect(() => {
+    setFocus("username");
+  }, [setFocus, method]);
 
   const onSubmit = async (data: RegisterUserPayload) => {
     console.log("Form Data:", data);
+
     const commonPayload = {
       password: data.password,
       username: data.username,
     };
+
     const registerData: RegisterUserPayload =
       method === "email"
         ? {
@@ -38,6 +45,7 @@ export default function Register({ onLoginClick, onSuccess, onError }: Props) {
             countryCode: data.countryCode,
             phone: data.phone,
           };
+
     await registerUserMutation.mutateAsync(registerData);
   };
 
@@ -64,98 +72,96 @@ export default function Register({ onLoginClick, onSuccess, onError }: Props) {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="name">
-              Name
-            </label>
-            <input
-              id="name"
-              {...register("username", { required: true })}
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-              placeholder="Jane Doe"
-            />
-            {errors.username && (
-              <span className="text-xs text-red-500">Name is required</span>
-            )}
-          </div>
+          <InputField
+            label="Name"
+            id="name"
+            type="text"
+            placeholder="Jane Doe"
+            registration={register("username", {
+              required: "Name is required",
+            })}
+            error={errors.username}
+          />
+
           {method === "email" ? (
-            <div>
-              <label className="block text-sm font-medium mb-1" htmlFor="email">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                {...register("email", {
-                  required: true,
-                  pattern: /^\S+@\S+$/i,
-                })}
-                className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                placeholder="you@example.com"
-              />
-              {errors.email && (
-                <span className="text-xs text-red-500">
-                  Valid email is required
-                </span>
-              )}
-            </div>
+            <InputField
+              label="Email"
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              registration={register("email", {
+                required:
+                  method === "email"
+                    ? "Email is required for email registration"
+                    : false,
+                pattern: {
+                  value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/i,
+                  message: "Invalid email address",
+                },
+              })}
+              error={errors.email}
+            />
           ) : (
             <div className="flex gap-2">
               <div className="w-1/3">
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="countryCode"
-                >
-                  Code
-                </label>
-                <input
+                <InputField
+                  label="Code"
                   id="countryCode"
-                  {...register("countryCode", { required: true })}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                  type="text"
                   placeholder="+91"
+                  registration={register("countryCode", {
+                    required:
+                      method === "phone"
+                        ? "Country Code is required for phone registration"
+                        : false,
+                  })}
+                  error={errors.countryCode}
+                  inputClassName="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
               <div className="w-2/3">
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="phone"
-                >
-                  Phone
-                </label>
-                <input
+                <InputField
+                  label="Phone"
                   id="phone"
                   type="tel"
-                  {...register("phone", {
-                    required: true,
-                    pattern: /^[0-9]{7,15}$/,
-                  })}
-                  className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
                   placeholder="9876543210"
+                  registration={register("phone", {
+                    required:
+                      method === "phone"
+                        ? "Phone number is required for phone registration"
+                        : false,
+                    pattern: {
+                      value: /^[0-9]{7,15}$/,
+                      message: "Invalid phone number format (7-15 digits)",
+                    },
+                  })}
+                  error={errors.phone}
                 />
               </div>
+              {(errors.phone || errors.countryCode) &&
+                !errors.phone?.message &&
+                !errors.countryCode?.message && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Phone and country code are required for phone registration.
+                  </p>
+                )}
             </div>
           )}
 
-          <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              htmlFor="password"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              {...register("password", { required: true, minLength: 6 })}
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-              placeholder="••••••••"
-            />
-            {errors.password && (
-              <span className="text-xs text-red-500">
-                Password must be at least 6 characters
-              </span>
-            )}
-          </div>
+          <InputField
+            label="Password"
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            registration={register("password", {
+              required: "Password is required",
+              minLength: {
+                value: 6,
+                message: "Password must be at least 6 characters",
+              },
+            })}
+            error={errors.password}
+          />
 
           <Button
             className="w-full"

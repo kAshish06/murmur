@@ -42,6 +42,20 @@ export default function Modal({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (isOpen) {
+      const handleEscapeKey = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+          onClose();
+        }
+      };
+      document.addEventListener("keydown", handleEscapeKey);
+      return () => {
+        document.removeEventListener("keydown", handleEscapeKey);
+      };
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const zIndex = 1000 + modalCount * 10;

@@ -26,7 +26,7 @@ export default function LandingPage() {
     accessToken[1](data.token);
     refreshToken[1](data.refreshToken);
     setUser(data.user);
-    navigate("/chat");
+    navigate("/conversations");
   };
   const onError = () => {
     // Notify user about failure via toast

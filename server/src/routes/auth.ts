@@ -12,6 +12,7 @@ import {
   findRefreshToken,
   deleteAndAddNewRefreshToken,
   getNewAccessToken,
+  invalidateRefreshToken,
 } from "../services/tokenService";
 import { AuthenticatedRequest, verifyToken } from "../middleware/verifyToken";
 import {
@@ -199,12 +200,16 @@ router.post(
 router.get(
   "/user",
   verifyToken,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const userIdRaw = req.user?.id;
       const userId = Number(userIdRaw);
 
-      if (!userIdRaw || Number.isNaN(userId)) {
+      if (Number.isNaN(userId)) {
         res.status(USERID_INVALID.code).json({ error: USERID_INVALID });
         return;
       }
@@ -217,6 +222,26 @@ router.get(
       res.status(HTTP_STATUS_CODE_MAP.SUCCESS).json({ user });
     } catch (err) {
       next(err);
+    }
+  }
+);
+
+router.post(
+  "/logout",
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      res.status(400).json({ message: "Refresh token is required for logout" });
+      return;
+    }
+
+    try {
+      await invalidateRefreshToken(refreshToken);
+
+      res.status(200).json({ message: "Logout successful" });
+    } catch (error: any) {
+      next(error);
     }
   }
 );

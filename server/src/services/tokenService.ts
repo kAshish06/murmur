@@ -99,3 +99,14 @@ export const getNewAccessToken = (user: User) => {
     expiresIn: ACCESS_TOKEN_EXPIRY,
   });
 };
+
+export const invalidateRefreshToken = async (
+  refreshToken: string
+): Promise<void> => {
+  const tokenHash = hashToken(refreshToken);
+  await prisma.refreshToken.delete({
+    where: {
+      tokenHash: tokenHash,
+    },
+  });
+};

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import Header from "./Header";
 import HeroSection from "./HeroSection";
@@ -19,7 +19,11 @@ export default function LandingPage() {
   const accessToken = useLocalStorage("accessToken", "");
   const refreshToken = useLocalStorage("refreshToken", "");
   const navigate = useNavigate();
-
+  useEffect(() => {
+    if (accessToken[0]) {
+      navigate("/conversations");
+    }
+  }, []);
   const closeModal = () => setModalContent(undefined);
   const onSuccess = (data: RegisterAndLoginResponse) => {
     closeModal();

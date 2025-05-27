@@ -1,7 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import http from "http";
 import cors from "cors";
-import { Server as SocketIOServer } from "socket.io";
 import dotenv from "dotenv";
 
 import rateLimiterMiddleware from "./middleware/rateLimiter";
@@ -9,16 +8,13 @@ import sanitizeBodyMiddleware from "./middleware/sanitiseUserInput";
 import logApiMiddleware from "./middleware/logger";
 import errorHandlerMiddleware from "./middleware/errorHandler";
 import authRoutes from "./routes/auth";
+import chatRoutes from "./routes/chat";
+import { initSocketServer } from "./socket";
 
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const io = new SocketIOServer(server, {
-  cors: {
-    origin: "*", // Set frontend URL in prod
-  },
-});
 
 /** Register middlewares */
 const whitelist = process.env.CORS_WHITELIST
@@ -44,23 +40,14 @@ app.use(rateLimiterMiddleware);
 app.use(sanitizeBodyMiddleware);
 
 app.use("/api/auth", authRoutes);
+app.use("/api/chat", chatRoutes);
 app.use(errorHandlerMiddleware);
 
 app.get("/", (_req, res) => {
   res.send("Murmur backend is running");
 });
 
-io.on("connection", (socket) => {
-  console.log("New client connected: " + socket.id);
-
-  socket.on("message", (msg) => {
-    socket.broadcast.emit("message", msg);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnected: " + socket.id);
-  });
-});
+const io = initSocketServer(server, whitelist);
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {

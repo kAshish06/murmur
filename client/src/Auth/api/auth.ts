@@ -3,20 +3,40 @@ import type {
   LoginPayload,
   RegisterUserPayload,
   RegisterAndLoginResponse,
+  RefreshTokenResponse,
+  User,
 } from "../types";
 
-export async function fetchUser(id: string) {
-  return await callApi.get(`/user/${id}`);
+export async function fetchUser(): Promise<User> {
+  const response = await callApi.get<User>(`/auth/user`);
+  return response.result;
 }
 
 export async function registerUser(
   data: RegisterUserPayload
 ): Promise<RegisterAndLoginResponse> {
-  return await callApi.post("/auth/register", data);
+  const response = await callApi.post<RegisterAndLoginResponse>(
+    "/auth/register",
+    data
+  );
+  return response.result;
 }
 
 export async function login(
   data: LoginPayload
 ): Promise<RegisterAndLoginResponse> {
-  return await callApi.post("/auth/login", data);
+  const response = await callApi.post<RegisterAndLoginResponse>(
+    "/auth/login",
+    data
+  );
+  return response.result;
+}
+
+export async function refreshTokens(
+  refreshToken: string | null
+): Promise<RefreshTokenResponse> {
+  const response = await callApi.post<RefreshTokenResponse>("/auth/refresh", {
+    refreshToken,
+  });
+  return response.result;
 }

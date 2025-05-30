@@ -1,24 +1,32 @@
-import React from "react";
+import { useState, useCallback } from "react";
 
 export default function useLocalStorage<T>(
   key: string,
   initialValue: T
 ): [T, (value: T) => void] {
-  const getStoredValue = () => {
+  const getStoredValue = (): T => {
     try {
       const storedValue = localStorage.getItem(key);
-      return storedValue !== null ? JSON.parse(storedValue) : initialValue;
+      if (storedValue === null) {
+        return initialValue;
+      }
+      return JSON.parse(storedValue) as T;
     } catch (e) {
-      console.error("error parsing json", e);
+      console.error("Error retrieving or parsing value from local storage:", e);
       return initialValue;
     }
   };
-  const [value, setValue] = React.useState(getStoredValue);
 
-  const updateValue = React.useCallback(
+  const [value, setValue] = useState<T>(getStoredValue);
+
+  const updateValue = useCallback(
     (newValue: T) => {
       setValue(newValue);
-      localStorage.setItem(key, JSON.stringify(newValue));
+      try {
+        localStorage.setItem(key, JSON.stringify(newValue));
+      } catch (e) {
+        console.error("Error setting value in local storage:", e);
+      }
     },
     [key]
   );

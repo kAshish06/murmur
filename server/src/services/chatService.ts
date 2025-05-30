@@ -1,4 +1,35 @@
 import prisma from "../utils/prismaClient";
+import { Message as PrismaMessage } from "@prisma/client";
+
+export interface CreateMessagePayload {
+  conversationId: number;
+  senderId: number;
+  content: string;
+}
+
+/**
+ * Saves a new message to the database.
+ * Allows database errors to propagate to the caller.
+ * @param data The data for the message to create.
+ * @returns The created message object from the database.
+ * @throws Error if the database operation fails.
+ */
+export const createMessage = async (
+  data: CreateMessagePayload
+): Promise<PrismaMessage> => {
+  const newMessage = await prisma.message.create({
+    data: {
+      conversation: {
+        connect: { id: data.conversationId },
+      },
+      sender: {
+        connect: { id: data.senderId },
+      },
+      content: data.content,
+    },
+  });
+  return newMessage;
+};
 
 export const findUserConversations = async (userId: number) => {
   return await prisma.userConversation.findMany({

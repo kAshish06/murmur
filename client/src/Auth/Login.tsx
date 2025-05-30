@@ -28,12 +28,12 @@ export default function Login({ onRegisterClick, onSuccess, onError }: Props) {
     formState: { errors },
     setFocus,
   } = useForm<LoginForm>();
+
   useEffect(() => {
     setFocus(loginMethod);
   }, [setFocus, loginMethod]);
 
   const onSubmit = async (data: LoginForm) => {
-    console.log("Login Data:", data);
     const commonPayload = {
       password: data.password,
     };

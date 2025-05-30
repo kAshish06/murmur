@@ -3,9 +3,12 @@ type RequestOptions = {
   data?: unknown;
   headers?: HeadersInit;
 };
-
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://murmur-8frr.onrender.com/api";
+type FormattedResponse<T> = {
+  status: string;
+  result: T;
+};
+const BASE_URL = "http://localhost:4000/api";
+// import.meta.env.VITE_API_BASE_URL || "https://murmur-8frr.onrender.com/api";
 
 async function refreshToken(): Promise<boolean> {
   const token = sessionStorage.getItem("token");
@@ -32,7 +35,7 @@ async function refreshToken(): Promise<boolean> {
 async function httpRequest<T>(
   endpoint: string,
   options: RequestOptions
-): Promise<T> {
+): Promise<FormattedResponse<T>> {
   const { method = "GET", data } = options;
 
   const config: RequestInit = {
@@ -41,11 +44,12 @@ async function httpRequest<T>(
       "Content-Type": "application/json",
     },
   };
-  const token = sessionStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   if (token) {
+    const parsedToken = JSON.parse(token);
     (config.headers as Record<string, string>)[
       "Authorization"
-    ] = `Bearer ${token}`;
+    ] = `Bearer ${parsedToken}`;
   }
 
   if (method !== "GET" && data) {
@@ -73,17 +77,20 @@ async function httpRequest<T>(
 }
 
 const callApi = {
-  get: <T>(endpoint: string, data?: unknown): Promise<T> =>
+  get: <T>(endpoint: string, data?: unknown): Promise<FormattedResponse<T>> =>
     httpRequest(endpoint, {
       method: "GET",
       data,
     }),
-  post: <T>(endpoint: string, data?: unknown): Promise<T> =>
+  post: <T>(endpoint: string, data?: unknown): Promise<FormattedResponse<T>> =>
     httpRequest(endpoint, {
       method: "POST",
       data,
     }),
-  delete: <T>(endpoint: string, data?: unknown): Promise<T> =>
+  delete: <T>(
+    endpoint: string,
+    data?: unknown
+  ): Promise<FormattedResponse<T>> =>
     httpRequest(endpoint, {
       method: "DELETE",
       data,

@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-import jwt from "jsonwebtoken";
+import jwt, { TokenExpiredError } from "jsonwebtoken";
 import { AuthenticatedSocket } from "../index"; // Import the extended type
 
 /**
@@ -12,7 +12,6 @@ export const socketAuthMiddleware = (
 ) => {
   // Client should send the JWT in the 'token' field of the 'auth' handshake property
   const token = socket.handshake.auth.token;
-  console.log("JWT token: ", token);
 
   if (!token) {
     // No token provided, reject the connection
@@ -20,9 +19,7 @@ export const socketAuthMiddleware = (
   }
 
   const jwtSecret = process.env.JWT_SECRET;
-  console.log("JWT secret: ", jwtSecret);
   if (!jwtSecret) {
-    console.error("JWT_SECRET is not set in environment variables.");
     return next(new Error("Server configuration error"));
   }
 
@@ -35,7 +32,15 @@ export const socketAuthMiddleware = (
     socket.user = { id: decoded.id };
     next();
   } catch (e: any) {
-    console.error("JWT verification failed:", e.message);
-    return next(new Error("Invalid authentication token"));
+    // Check if the error is a TokenExpiredError
+    if (e instanceof TokenExpiredError) {
+      console.error("JWT verification failed: Token expired");
+      // Pass a specific error for expired token
+      return next(new Error("Authentication token has expired"));
+    } else {
+      console.error("JWT verification failed:", e.message);
+      // Pass a generic error for other token issues
+      return next(new Error("Invalid authentication token"));
+    }
   }
 };

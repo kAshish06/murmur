@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { TokenExpiredError } from "jsonwebtoken";
 import { User } from "../types/User";
 export interface UserPayload {
   id: string;
@@ -30,7 +30,11 @@ export const verifyToken = (
     next();
     return;
   } catch (e) {
-    res.status(403).json({ error: "Invalid token" });
+    if (e instanceof TokenExpiredError) {
+      res.status(401).json({ error: "Token has expired" });
+    } else {
+      res.status(403).json({ error: "Invalid token" });
+    }
     return;
   }
 };

@@ -10,6 +10,7 @@ import errorHandlerMiddleware from "./middleware/errorHandler";
 import authRoutes from "./routes/auth";
 import chatRoutes from "./routes/chat";
 import { initSocketServer } from "./socket";
+import responseformatter from "./middleware/responseFormatter";
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ app.use(express.json());
 app.use(logApiMiddleware);
 app.use(rateLimiterMiddleware);
 app.use(sanitizeBodyMiddleware);
+app.use(responseformatter);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);

@@ -90,7 +90,7 @@ router.get(
         return;
       }
 
-      res.status(HTTP_STATUS_CODE_MAP.SUCCESS).json({ messages });
+      res.status(HTTP_STATUS_CODE_MAP.SUCCESS).json(messages);
     } catch (error) {
       next(error);
     }

@@ -38,3 +38,8 @@ export type RegisterAndLoginResponse = {
   refreshToken: string;
   user: User;
 };
+
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}

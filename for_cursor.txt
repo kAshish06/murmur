@@ -1,0 +1,114 @@
+Context - 
+You are building a real-time chat application. Your primary goals are to enable instant, bidirectional 
+messaging between users, ensure all messages are reliably saved to a database, handle message processing 
+asynchronously using a message queue, and deliver messages either directly via WebSockets if the recipient 
+is online or via push notifications if they are offline. The technology stack for the server includes Node.js 
+with Express for the API, TypeScript for type safety, Prisma as the ORM for database interaction, Socket.IO 
+for managing WebSocket connections, a Message Queue (like RabbitMQ or Redis Pub/Sub) for decoupling and 
+asynchronous processing of incoming and outgoing messages, potentially Redis for managing user presence 
+across server instances, and integration with platform-specific (FCM, APNs) or unified services for sending 
+push notifications. On the client side, you are using React and TypeScript, the Socket.IO client library for 
+connecting to the WebSocket server, React Query for fetching data via HTTP (like historical messages), and 
+Zustand for managing client-side application state (such as conversations and messages).
+
+Implementation Plan:
+
+Phase 1: Basic WebSocket Server Setup
+
+*   **Goal:** Get a fundamental WebSocket server running that can accept connections and handle basic message receiving and broadcasting.
+*   **Tasks:**
+    *   Install the `socket.io` library in your server project.
+    *   Initialize the Socket.IO server instance, attaching it to your existing HTTP server (`app`).
+    *   Set up the primary Socket.IO connection event listener (`io.on('connection', ...)`).
+    *   Inside the connection handler, log when a new client connects (`socket.id` or similar).
+    *   Inside the connection handler, set up a listener for a specific client event (e.g., `socket.on('clientMessage', ...)`).
+    *   When a `clientMessage` is received, log its content on the server.
+    *   Implement a basic mechanism to broadcast that received message to *all* currently connected clients using `io.emit('serverMessage', ...)` (This is temporary for testing).
+    *   Handle and log the 'disconnect' event for sockets.
+    *   Ensure the Socket.IO server is started when your main Express application starts.
+
+Phase 2: Client WebSocket Integration
+
+*   **Goal:** Connect your React client application to the basic WebSocket server from Phase 1 and enable sending/receiving simple messages.
+*   **Tasks:**
+    *   Install the `socket.io-client` library in your client project.
+    *   Create and manage a Socket.IO client instance (e.g., using a React Hook, Context, or Zustand store) that connects to your server's WebSocket URL.
+    *   Display the connection status (connecting, connected, disconnected) in the client UI.
+    *   In a component (like `ConversationPane`):
+        *   Access the Socket.IO client instance.
+        *   Implement an input field and a button to allow typing and sending text.
+        *   On button click/Enter key, emit the input text to the server using the event name defined in Phase 1 (e.g., `socket.emit('clientMessage', { text: '...' });`).
+        *   Set up a listener for the server's broadcast event (e.g., `socket.on('serverMessage', (message) => { ... });`).
+        *   When a message is received via `serverMessage`, update the component's state or a shared store to display the message list.
+
+Phase 3: Database Persistence
+
+*   **Goal:** Modify the server to save received messages to the database using Prisma before broadcasting them (broadcasting will still be direct for now).
+*   **Tasks:**
+    *   Review and confirm your `prisma/schema.prisma` includes necessary models (`User`, `Conversation`, `Message`) with appropriate fields (sender, recipient/conversation link, text, timestamp).
+    *   Run `npx prisma migrate dev` (or `deploy` in production workflow) to apply schema changes to your database.
+    *   Inject or access your Prisma client instance within your Socket.IO handling logic on the server.
+    *   In the server's `socket.on('clientMessage', ...)` handler:
+        *   Receive the message data.
+        *   Use `PrismaClient.message.create({...})` to save the message to the database.
+        *   Handle potential database errors.
+        *   *After* successful database save, then emit the message using `io.emit('serverMessage', ...)` (still broadcasting to all for now).
+    *   In the client (`ConversationPane`), modify the logic to fetch historical messages using your existing React Query hook (`useGetMessages`) when a conversation is selected. Display these historical messages along with any new real-time messages received via WebSocket.
+
+Phase 4: Introduce Message Queue
+
+*   **Goal:** Integrate a message queue (MQ) to decouple the Socket.IO server from the database persistence logic and manage the flow of messages.
+*   **Tasks:**
+    *   Choose and set up your message queue broker (e.g., install RabbitMQ, configure Redis Pub/Sub).
+    *   Define two primary queues/topics in your MQ: `incoming_messages` and `outgoing_messages`.
+    *   **Server (Socket.IO Process):**
+        *   Establish a connection from your server process to the MQ as a Producer for `incoming_messages`.
+        *   In the `socket.on('clientMessage', ...)` handler, modify the logic to *only* publish the received message data (including sender, recipient(s), text) to the `incoming_messages` queue. Remove the direct database save and broadcast code.
+    *   **Create a separate Message Processing Worker Process:**
+        *   Create a new script/process (it can be a simple Node.js script).
+        *   Establish a connection from this worker process to the MQ as a Consumer for `incoming_messages`.
+        *   Implement logic in this worker to listen for and receive messages from `incoming_messages`.
+        *   Inside the worker's message handler:
+            *   Implement the database saving logic using Prisma (moving the code from the Socket.IO handler here).
+            *   Establish a connection from this worker to the MQ as a Producer for `outgoing_messages`.
+            *   After successfully saving the message to the database, publish the *processed* message data (including database ID, final timestamp, sender, *and recipient info*) to the `outgoing_messages` queue.
+    *   **Server (Socket.IO Process - or another listener):**
+        *   Establish a connection from your server process to the MQ as a Consumer for `outgoing_messages`.
+        *   Implement logic to listen for and receive messages from `outgoing_messages`.
+        *   Inside this handler, you will now decide whether to send via WebSocket or trigger a notification (detailed in Phase 5).
+
+Phase 5: User Presence & Message Routing
+
+*   **Goal:** Implement user online/offline presence tracking and route processed messages based on recipient status (WebSocket if online, forward for notification if offline).
+*   **Tasks:**
+    *   **Implement User Presence Tracking:**
+        *   When a user successfully authenticates their WebSocket connection (this authentication step needs to be added, perhaps using their JWT), store a mapping of their `userId` to their current `socket.id(s)`. This mapping needs to be accessible by the process consuming `outgoing_messages`.
+        *   **Technology Choice:** For a single server instance, an in-memory JavaScript object/Map is sufficient. For multiple server instances (for scalability), you *must* use a shared, external store like **Redis** to maintain the presence mapping across all instances.
+        *   On `socket.on('disconnect', ...)`, update the presence mapping: remove the disconnecting `socket.id`. If the user now has no active sockets, mark them as offline.
+    *   **Refine `outgoing_messages` Consumption and Routing:**
+        *   In the server process consuming the `outgoing_messages` queue (from Phase 4), for each received processed message:
+        *   Get the recipient `userId(s)` from the message data.
+        *   For each recipient:
+            *   Check the user presence mapping (using Redis or in-memory store) to see if the recipient is currently online and retrieve their active `socket.id(s)`.
+            *   **If Online:** Iterate through the recipient's active `socket.id(s)` and use your Socket.IO instance (`io`) to emit the processed message via WebSocket: `io.to(recipientSocketId).emit('newMessage', processedMessageData);` or similar methods (`io.sockets.in('room-id').emit(...)`) to send messages only to the intended recipient(s)' socket(s).
+            *   **If Offline:** Publish the processed message data to a *new* queue specifically for handling notifications (e.g., `notification_queue`). The data published here should contain all necessary information for generating a push notification (sender name, message text snippet, conversation ID, recipient ID).
+
+Phase 6: Push Notification System
+
+*   **Goal:** Set up a system to consume messages for offline users from the notification queue and trigger platform-specific push notifications.
+*   **Tasks:**
+    *   **Define `notification_queue`:** (This was part of the task in Phase 5, but explicitly listed here for clarity). Set up this new queue in your MQ broker.
+    *   **Create a dedicated Notification Service/Worker:**
+        *   Create a separate process or service whose sole responsibility is handling notifications.
+        *   Establish a connection from this service to the MQ as a Consumer for the `notification_queue`.
+        *   Implement logic to listen for and receive processed message data from `notification_queue`.
+    *   **Integrate with Push Notification Services:**
+        *   Inside the Notification Service's message handler:
+        *   Get the recipient `userId` and message data.
+        *   Retrieve the user's device registration tokens from your database (you'll need to add logic elsewhere for clients to register their devices and store these tokens).
+        *   **Technology Choices:** Use platform-specific or unified notification services:
+            *   For mobile (Android/iOS): Use **Firebase Cloud Messaging (FCM)** or **Apple Push Notification service (APNs)** directly, or use a unified service like **OneSignal** or **Expo Notifications** (especially if using Expo for React Native).
+            *   For web push notifications: Use the **Web Push API** in combination with a service worker on the client and a VAPID key setup on the server.
+        *   Use the chosen technology's SDK or API to send the push notification payload to the user's device(s) using their registration token(s).
+        *   Handle success and failure responses from the push notification service (e.g., remove invalid or expired tokens from your database).
+

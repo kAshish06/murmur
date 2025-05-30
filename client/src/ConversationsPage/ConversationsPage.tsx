@@ -1,74 +1,50 @@
-import React, { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import ConversationsHeader from "./ConversationsHeader";
-import ContactList from "./ContactList";
-// import ConversationPane from "./ConversationPane";
-import { io, Socket } from "socket.io-client";
+import ConversationsList from "./ConversationsList";
+import ConversationPane from "./ConversationPane";
+import useSocketConnect from "../socket";
+import useMessageStore from "../store/useMessageStore";
+import { useAuthStore } from "../store/useAuthStore";
 
-// Assuming your backend is running locally on port 4000
-const SOCKET_SERVER_URL = "http://localhost:4000"; // Use http for Socket.IO
-
-const ConversationsPage: React.FC = () => {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [messageInput, setMessageInput] = useState(""); // State for input field
-
-  useEffect(() => {
-    // Get the access token from where you store it (e.g., localStorage)
-    const accessToken = localStorage.getItem("accessToken"); // Use the correct key
-
-    if (!accessToken) {
-      console.error("No access token found. Cannot connect to socket.");
-      // Optionally redirect to login or show error
-      return;
-    }
-
-    // Establish the socket connection with the authentication token
-    const newSocket = io(SOCKET_SERVER_URL, {
-      auth: {
-        token: accessToken, // Pass the JWT here
-      },
-      // You might need additional transport options depending on your server setup
-      // transports: ['websocket'], // Forcing websocket transport
-    });
-
-    // Handle connection events
-    newSocket.on("connect", () => {
-      console.log("Socket connected:", newSocket.id);
-    });
-
-    newSocket.on("connect_error", (err) => {
-      console.error("Socket connection error:", err.message);
-      // Handle authentication failure or other connection issues
-      // e.g., redirect to login if token is invalid
-    });
-
-    newSocket.on("disconnect", (reason) => {
-      console.log("Socket disconnected:", reason);
-      setSocket(null); // Update state on disconnect
-    });
-
-    // Add listener for incoming messages (Chunk 4 will use this)
-    newSocket.on("message", (msg) => {
-      console.log("Message received from server:", msg);
-      // Later, update UI to display this message
-    });
-
-    setSocket(newSocket); // Store the socket instance in state
-
-    // Clean up the socket connection on component unmount
-    return () => {
-      if (newSocket) {
-        newSocket.disconnect();
-        console.log("Socket disconnected on component unmount");
-      }
-    };
-  }, []); // Empty dependency array means this effect runs only once on mount
-
-  // Handler for sending a message
+export default function ConversationsPage() {
+  const { socket, isConnected } = useSocketConnect();
+  const [selectedConversationId, setSelectedConversationId] =
+    useState<string>();
+  const [messageInput, setMessageInput] = useState("");
+  const user = useAuthStore((state) => state.user);
+  const addMessage = useMessageStore((state) => state.addMessage);
+  const handleConversationSelection = useCallback((conversationId: string) => {
+    setSelectedConversationId(conversationId);
+  }, []);
   const handleSendMessage = () => {
-    if (socket && messageInput.trim()) {
+    if (
+      socket &&
+      isConnected &&
+      messageInput.trim() &&
+      user &&
+      selectedConversationId
+    ) {
       console.log("Sending message:", messageInput);
-      socket.emit("message", messageInput); // Emit the 'message' event
-      setMessageInput(""); // Clear the input field
+      addMessage(
+        {
+          id: Math.random(),
+          conversationId: Number(selectedConversationId),
+          senderId: user.id,
+          content: messageInput,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          sender: {
+            id: user?.id,
+            username: user?.username,
+          },
+        },
+        selectedConversationId
+      );
+      socket.emit("sendMessage", {
+        text: messageInput,
+        conversationId: selectedConversationId,
+      });
+      setMessageInput("");
     }
   };
 
@@ -77,10 +53,19 @@ const ConversationsPage: React.FC = () => {
       <ConversationsHeader />
       <div className="flex h-[calc(100vh-headerHeight)]">
         <div className="w-1/3 border-r">
-          <ContactList />
+          <ConversationsList
+            onConversationSelection={handleConversationSelection}
+          />
         </div>
         <div className="w-2/3">
-          {/* <ConversationPane /> */}
+          {!selectedConversationId && (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              Select a contact to view the conversation.
+            </div>
+          )}
+          {selectedConversationId && (
+            <ConversationPane selectedConversationId={selectedConversationId} />
+          )}
 
           <div className="p-4 border-t">
             <input
@@ -92,8 +77,8 @@ const ConversationsPage: React.FC = () => {
             />
             <button
               onClick={handleSendMessage}
-              disabled={!socket || !messageInput.trim()}
-              className="bg-blue-500 text-white p-2 rounded"
+              disabled={!socket || !isConnected || !messageInput.trim()}
+              className="bg-blue-500 text-white p-2 rounded disabled:opacity-50"
             >
               Send
             </button>
@@ -102,6 +87,4 @@ const ConversationsPage: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default ConversationsPage;
+}

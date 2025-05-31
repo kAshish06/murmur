@@ -1,17 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import winston from "winston";
-
-export const logger = winston.createLogger({
-  level: "info",
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console(), // may log to file in prod
-  ],
-});
+import { logger } from "../utils/logger";
 
 export default function logApiMiddleware(
   req: Request,

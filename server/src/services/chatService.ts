@@ -1,5 +1,6 @@
 import prisma from "../utils/prismaClient";
 import { Message as PrismaMessage } from "@prisma/client";
+import { logger } from "../utils/logger";
 
 export interface CreateMessagePayload {
   conversationId: number;
@@ -17,18 +18,23 @@ export interface CreateMessagePayload {
 export const createMessage = async (
   data: CreateMessagePayload
 ): Promise<PrismaMessage> => {
-  const newMessage = await prisma.message.create({
-    data: {
-      conversation: {
-        connect: { id: data.conversationId },
+  try {
+    const newMessage = await prisma.message.create({
+      data: {
+        conversation: {
+          connect: { id: data.conversationId },
+        },
+        sender: {
+          connect: { id: data.senderId },
+        },
+        content: data.content,
       },
-      sender: {
-        connect: { id: data.senderId },
-      },
-      content: data.content,
-    },
-  });
-  return newMessage;
+    });
+    return newMessage;
+  } catch (error) {
+    logger.error("Error creating message:", error);
+    throw error;
+  }
 };
 
 export const findUserConversations = async (userId: number) => {
@@ -138,8 +144,6 @@ export const getMessagesForConversation = async (
 
     // If user is not a participant, return null
     if (!userConversation) {
-      // Or you could return a specific error object here
-      // return { error: new ServiceError(404, "Conversation not found or not accessible") };
       return null;
     }
 
@@ -158,7 +162,6 @@ export const getMessagesForConversation = async (
             // Select only necessary user fields for the sender
             id: true,
             username: true,
-            // Include other safe user fields as needed, e.g., profile picture URL
           },
         },
       },
@@ -166,10 +169,27 @@ export const getMessagesForConversation = async (
 
     return messages;
   } catch (error) {
-    // Log the error for debugging
     console.error("Error fetching messages for conversation:", error);
-    // Propagate the error or return a standardized error object
-    // return { error: new ServiceError(500, "Failed to fetch messages") };
-    throw error; // Rethrow the error to be caught by the route handler's try/catch
+    throw error;
   }
 };
+
+export async function getConversationParticipants(conversationId: number) {
+  try {
+    const userConversations = await prisma.userConversation.findMany({
+      where: { conversationId },
+      select: {
+        userId: true,
+      },
+    });
+
+    if (!userConversations.length) {
+      throw new Error(`Conversation ${conversationId} not found`);
+    }
+
+    return userConversations.map((uc) => uc.userId);
+  } catch (error) {
+    logger.error(`Error getting conversation participants:`, error);
+    throw error;
+  }
+}

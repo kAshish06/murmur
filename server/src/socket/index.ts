@@ -1,19 +1,19 @@
 import { Server as SocketIOServer, Socket } from "socket.io";
 import http from "http";
-import { socketAuthMiddleware } from "./middleware/authMiddleware";
-import { createMessage } from "../services/chatService";
-import { Message as PrismaMessage } from "@prisma/client";
+import { userConnected, userDisconnected } from "../services/presenceService";
+import { v4 as uuidv4 } from "uuid";
+import { logger } from "../utils/logger";
+import { QUEUE_CONFIG, RawMessage } from "../types/messages";
+import { RabbitMQService } from "../services/rabbitmqService";
 
 export interface AuthenticatedSocket extends Socket {
   user?: { id: number };
+  deviceId?: string;
 }
+
 interface IncomingMessage {
   conversationId: number;
   text: string;
-}
-
-interface OutgoingMessage extends PrismaMessage {
-  // If you need to add any extra fields not in PrismaMessage, define them here
 }
 
 /**
@@ -34,88 +34,118 @@ export const initSocketServer = (
     },
   });
 
-  io.use(socketAuthMiddleware);
+  io.on("connection", async (socket: AuthenticatedSocket) => {
+    if (!socket.user?.id) {
+      logger.warn(`Unauthenticated socket connection attempt: ${socket.id}`);
+      socket.disconnect();
+      return;
+    }
 
-  io.on("connection", (socket: AuthenticatedSocket) => {
-    console.log(
-      `Authenticated client connected: ${socket.id}, User ID: ${socket.user?.id}`
-    );
+    try {
+      const deviceId = uuidv4();
+      socket.deviceId = deviceId;
 
-    socket.on(
-      "sendMessage",
-      async (message: IncomingMessage, callback?: (error?: any) => void) => {
-        if (!socket.user?.id) {
-          console.warn(
-            `Received message from unauthenticated socket: ${socket.id}`
-          );
-          if (callback) {
-            callback({ error: "Authentication required" });
+      await userConnected(socket.user.id, deviceId, socket.id);
+
+      logger.info(
+        `User ${socket.user.id} connected with device ${deviceId} (socket: ${socket.id})`
+      );
+
+      // Join user's personal room for direct messages and presence updates
+      socket.join(`user:${socket.user.id}`);
+
+      socket.on(
+        "sendMessage",
+        async (message: IncomingMessage, callback?: (error?: any) => void) => {
+          if (!socket.user?.id) {
+            logger.warn(
+              `Received message from unauthenticated socket: ${socket.id}`
+            );
+            if (callback) {
+              callback({ error: "Authentication required" });
+            }
+            return;
           }
-          return;
-        }
 
-        const senderId = socket.user.id;
-        const { conversationId, text } = message;
+          const senderId = socket.user.id;
+          const { conversationId, text } = message;
 
-        if (!conversationId || !text) {
-          console.warn(
-            `Received invalid message data from user ${senderId}:`,
-            message
-          );
-          if (callback) {
-            callback({
-              error: "Invalid message data (missing conversationId or text)",
-            });
+          if (!conversationId || !text) {
+            logger.warn(
+              `Received invalid message data from user ${senderId}:`,
+              message
+            );
+            if (callback) {
+              callback({
+                error: "Invalid message data (missing conversationId or text)",
+              });
+            }
+            return;
           }
-          return;
-        }
 
-        console.log(
-          `Attempting to save message for Conversation ${conversationId} from User ${senderId}:`,
-          text
+          try {
+            logger.info(
+              `Publishing message for Conversation ${conversationId} from User ${senderId} to incoming queue`
+            );
+
+            const rawMessage: RawMessage = {
+              messageId: uuidv4(),
+              senderId,
+              conversationId,
+              content: text,
+              timestamp: new Date(),
+              metadata: {
+                deviceId: socket.deviceId,
+                socketId: socket.id,
+              },
+            };
+
+            await RabbitMQService.getInstance().publish(
+              QUEUE_CONFIG.incoming.name,
+              rawMessage
+            );
+
+            if (callback) {
+              callback();
+            }
+          } catch (error) {
+            logger.error(
+              `Error publishing message for user ${senderId} in conversation ${conversationId}:`,
+              error
+            );
+            if (callback) {
+              callback({ error: "Failed to send message" });
+            }
+          }
+        }
+      );
+
+      socket.on("disconnect", async () => {
+        if (socket.user?.id && socket.deviceId) {
+          try {
+            await userDisconnected(socket.user.id, socket.deviceId);
+            logger.info(
+              `User ${socket.user.id} disconnected device ${socket.deviceId} (socket: ${socket.id})`
+            );
+          } catch (error) {
+            logger.error(
+              `Error handling disconnection for user ${socket.user.id}:`,
+              error
+            );
+          }
+        }
+      });
+
+      socket.on("error", (err) => {
+        logger.error(
+          `Socket error for user ${socket.user?.id} (${socket.id}):`,
+          err
         );
-
-        try {
-          const savedMessage = await createMessage({
-            conversationId,
-            senderId,
-            content: text,
-          });
-
-          console.log(`Message saved to database: ${savedMessage.id}`);
-
-          socket.broadcast.emit(
-            "receiveMessage",
-            savedMessage as OutgoingMessage
-          );
-
-          if (callback) {
-            callback();
-          }
-        } catch (error) {
-          console.error(
-            `Error saving or broadcasting message for user ${senderId} in conversation ${conversationId}:`,
-            error
-          );
-          if (callback) {
-            callback({ error: "Failed to send message" });
-          }
-        }
-      }
-    );
-
-    socket.on("disconnect", () => {
-      console.log(
-        `Client disconnected: ${socket.id}, User ID: ${socket.user?.id}`
-      );
-    });
-
-    socket.on("error", (err) => {
-      console.error(
-        `Socket error for user ${socket.user?.id} (${socket.id}):`,
-        err
-      );
-    });
+      });
+    } catch (error) {
+      logger.error(`Error handling socket connection:`, error);
+      socket.disconnect();
+    }
   });
 
   return io;

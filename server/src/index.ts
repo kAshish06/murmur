@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
 import http from "http";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -11,47 +11,69 @@ import authRoutes from "./routes/auth";
 import chatRoutes from "./routes/chat";
 import { initSocketServer } from "./socket";
 import responseformatter from "./middleware/responseFormatter";
+import { RabbitMQService } from "./services/rabbitmqService";
+import { startMessageProcessor } from "./messageProcessing/messageProcessor";
+import { initPresenceService } from "./services/presenceService";
+import { startSocketEventProcessor } from "./messageProcessing/socketEventProcessor";
+import { socketAuthMiddleware } from "./socket/middleware/authMiddleware";
 
 dotenv.config();
 
-const app = express();
-const server = http.createServer(app);
+(async function () {
+  const app = express();
+  const server = http.createServer(app);
 
-/** Register middlewares */
-const whitelist = process.env.CORS_WHITELIST
-  ? process.env.CORS_WHITELIST.split(",").map((origin) => origin.trim())
-  : [];
-console.log(whitelist);
-const corsOptions = {
-  origin: function (
-    origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void
-  ) {
-    if (!origin || whitelist.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-};
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(logApiMiddleware);
-app.use(rateLimiterMiddleware);
-app.use(sanitizeBodyMiddleware);
-app.use(responseformatter);
+  /** Register middlewares */
+  const whitelist = process.env.CORS_WHITELIST
+    ? process.env.CORS_WHITELIST.split(",").map((origin) => origin.trim())
+    : [];
+  console.log(whitelist);
+  const corsOptions = {
+    origin: function (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void
+    ) {
+      if (!origin || whitelist.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+  };
+  app.use(cors(corsOptions));
+  app.use(express.json());
+  app.use(logApiMiddleware);
+  app.use(rateLimiterMiddleware);
+  app.use(sanitizeBodyMiddleware);
+  app.use(responseformatter);
 
-app.use("/api/auth", authRoutes);
-app.use("/api/chat", chatRoutes);
-app.use(errorHandlerMiddleware);
+  /** Initialize routes */
+  app.use("/api/auth", authRoutes);
+  app.use("/api/chat", chatRoutes);
 
-app.get("/", (_req, res) => {
-  res.send("Murmur backend is running");
-});
+  /** Initialize error handler */
+  app.use(errorHandlerMiddleware);
 
-const io = initSocketServer(server, whitelist);
+  /** Initialize root route */
+  app.get("/", (_req, res) => {
+    res.send("Murmur backend is running");
+  });
 
-const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+  /** Initialize socket server */
+  const io = initSocketServer(server, whitelist);
+  io.use(socketAuthMiddleware);
+
+  /** Initialize rabbitmq */
+  const rabbitMQ = RabbitMQService.getInstance();
+  await rabbitMQ.connect();
+
+  /** Initialize message processor */
+  startMessageProcessor();
+  startSocketEventProcessor(io);
+  initPresenceService(io);
+
+  const PORT = process.env.PORT || 4000;
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+})();

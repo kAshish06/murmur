@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { logger } from "./logger"; // Assuming you have a logger utility
+import { logger } from "../utils/logger"; // Assuming you have a logger utility
 
 export default function errorHandlerMiddleware(
   err: any,

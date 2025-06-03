@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import useLocalStorage from "../hooks/useLocalStorage";
 import { useRefreshTokenMutation } from "../Auth/query/authQuery";
 import { type Message } from "../ConversationsPage/types";
+import { useAuthStore } from "../store/useAuthStore";
 
 const SOCKET_SERVER_URL = "http://localhost:4000";
 // "https://murmur-8frr.onrender.com";
@@ -24,6 +25,8 @@ export default function useSocketConnect(
   );
   const navigate = useNavigate();
 
+  const { setUser } = useAuthStore();
+
   const refreshTokenMutation = useRefreshTokenMutation(
     (data) => {
       console.log("Token refreshed successfully");
@@ -34,6 +37,7 @@ export default function useSocketConnect(
       console.error("Failed to refresh token. Redirecting to login.");
       setAccessToken(null);
       setRefreshToken(null);
+      setUser(null);
       navigate("/");
     }
   );
@@ -104,6 +108,7 @@ export default function useSocketConnect(
     });
 
     newSocket.on("receiveMessage", (data: Message) => {
+      console.log("Received message from socket - ", data);
       handleSocketReceivedMessage(data);
     });
 

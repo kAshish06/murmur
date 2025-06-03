@@ -1,65 +1,33 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import Header from "./Header";
 import HeroSection from "./HeroSection";
 import FeatureSection from "./FeaturesSection";
 import Footer from "./Footer";
 import Modal from "../components/atoms/Modal";
-import Login from "../Auth/Login";
 import Register from "../Auth/Register";
-import type { RegisterAndLoginResponse } from "../Auth/types";
 import useLocalStorage from "../hooks/useLocalStorage";
-import { useAuthStore } from "../store/useAuthStore";
 
 export default function LandingPage() {
-  const [modalContent, setModalContent] = useState<
-    "login" | "register" | undefined
-  >();
-  const { setUser } = useAuthStore();
+  const [showRegisterModal, setShowRegisterModal] = useState<boolean>(false);
   const accessToken = useLocalStorage("accessToken", "");
-  const refreshToken = useLocalStorage("refreshToken", "");
   const navigate = useNavigate();
   useEffect(() => {
     if (accessToken[0]) {
       navigate("/conversations");
     }
   }, []);
-  const closeModal = () => setModalContent(undefined);
-  const onSuccess = (data: RegisterAndLoginResponse) => {
-    closeModal();
-    accessToken[1](data.token);
-    refreshToken[1](data.refreshToken);
-    setUser(data.user);
-    navigate("/conversations");
-  };
-  const onError = () => {
-    // Notify user about failure via toast
-  };
+  const closeModal = () => setShowRegisterModal(false);
+
   return (
     <div className="pl-8 pr-8">
-      <Header onLoginClick={setModalContent} />
-      <HeroSection onRegisterClick={setModalContent} />
+      <HeroSection onRegisterClick={() => setShowRegisterModal(true)} />
       <FeatureSection />
       <Footer />
-      {modalContent && (
+      {showRegisterModal && (
         <Modal
           isOpen={true}
           onClose={closeModal}
-          body={
-            modalContent === "login" ? (
-              <Login
-                onSuccess={onSuccess}
-                onError={onError}
-                onRegisterClick={setModalContent}
-              />
-            ) : (
-              <Register
-                onLoginClick={setModalContent}
-                onSuccess={onSuccess}
-                onError={onError}
-              />
-            )
-          }
+          body={<Register closeModal={closeModal} />}
         />
       )}
     </div>

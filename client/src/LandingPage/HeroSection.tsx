@@ -1,7 +1,7 @@
 import Button from "../components/atoms/Button";
 
 type props = {
-  onRegisterClick: (modal: "login" | "register") => void;
+  onRegisterClick: () => void;
 };
 export default function HeroSection({ onRegisterClick }: props) {
   return (
@@ -13,7 +13,7 @@ export default function HeroSection({ onRegisterClick }: props) {
         Murmur is the modern way to chat — clean, private, and lightning fast.
       </p>
       <div className="my-3">
-        <Button btnType="primary" onClick={() => onRegisterClick("register")}>
+        <Button btnType="primary" onClick={() => onRegisterClick()}>
           Get Started
         </Button>
       </div>

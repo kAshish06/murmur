@@ -5,16 +5,31 @@ import { useRegisterUserMutation } from "./query/authQuery";
 import type { RegisterUserPayload, RegisterAndLoginResponse } from "./types";
 import RotatingArrowLoader from "../components/customUtils/RotatingArrowLoader";
 import InputField from "../components/atoms/InputField";
+import useLocalStorage from "../hooks/useLocalStorage";
+import { useAuthStore } from "../store/useAuthStore";
+import { useNavigate } from "react-router";
 
 type Props = {
-  onLoginClick: (modal: "login" | "register") => void;
-  onSuccess: (data: RegisterAndLoginResponse) => void;
-  onError: () => void;
+  closeModal: () => void;
 };
 
-export default function Register({ onLoginClick, onSuccess, onError }: Props) {
+export default function Register({ closeModal }: Props) {
   const [method, setMethod] = useState<"email" | "phone">("email");
+  const accessToken = useLocalStorage("accessToken", "");
+  const refreshToken = useLocalStorage("refreshToken", "");
+  const { setUser } = useAuthStore();
+  const navigate = useNavigate();
 
+  const onSuccess = (data: RegisterAndLoginResponse) => {
+    closeModal();
+    accessToken[1](data.token);
+    refreshToken[1](data.refreshToken);
+    setUser(data.user);
+    navigate("/conversations");
+  };
+  const onError = () => {
+    // Notify user about failure via toast
+  };
   const {
     register,
     handleSubmit,
@@ -175,13 +190,6 @@ export default function Register({ onLoginClick, onSuccess, onError }: Props) {
             )}
           </Button>
         </form>
-
-        <p className="text-center text-sm mt-8">
-          Already have an account?{" "}
-          <Button btnType="link" onClick={() => onLoginClick("login")}>
-            Login
-          </Button>
-        </p>
       </div>
     </div>
   );

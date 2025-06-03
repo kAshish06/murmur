@@ -19,7 +19,7 @@ export async function startMessageProcessor() {
     QUEUE_CONFIG.incoming.name,
     async (message: RawMessage) => {
       try {
-        const savedMessage = await createMessage({
+        const { message: savedMessage } = await createMessage({
           conversationId: message.conversationId,
           senderId: message.senderId,
           content: message.content,
@@ -57,6 +57,9 @@ export async function startMessageProcessor() {
             content: message.content,
             createdAt: message.timestamp,
             status: message.status,
+            sender: {
+              id: message.senderId,
+            },
           },
           recipientIds: participantIds,
         };

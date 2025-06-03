@@ -1,5 +1,8 @@
 import prisma from "../utils/prismaClient";
-import { Message as PrismaMessage } from "@prisma/client";
+import {
+  Message as PrismaMessage,
+  Conversation as PrismaConversation,
+} from "@prisma/client";
 import { logger } from "../utils/logger";
 import { MessageStatusEnum } from "../types/messages";
 
@@ -19,7 +22,7 @@ export interface CreateMessagePayload {
  */
 export const createMessage = async (
   data: CreateMessagePayload
-): Promise<PrismaMessage> => {
+): Promise<{ message: PrismaMessage; conversation: PrismaConversation }> => {
   try {
     const newMessage = await prisma.message.create({
       data: {
@@ -33,7 +36,15 @@ export const createMessage = async (
         status: data.status,
       },
     });
-    return newMessage;
+    const conversation = await prisma.conversation.update({
+      where: {
+        id: data.conversationId,
+      },
+      data: {
+        updatedAt: new Date(),
+      },
+    });
+    return { message: newMessage, conversation };
   } catch (error) {
     logger.error("Error creating message:", error);
     throw error;

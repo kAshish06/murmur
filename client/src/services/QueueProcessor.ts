@@ -3,6 +3,7 @@ import QueueManager from "./QueueManager";
 import { messageQueueDB } from "./messageQueueDB";
 import { Socket } from "socket.io-client";
 import useMessageStore from "../store/useMessageStore";
+import useConversationStore from "../store/useConversationsStore";
 
 class QueueProcessor {
   private queueManager: QueueManager;
@@ -180,6 +181,12 @@ class QueueProcessor {
         senderId: message.senderId,
         tempId: message.tempId,
       });
+      const conversationStore = useConversationStore.getState();
+      const { updateConversation } = conversationStore;
+      if (message.updatedAt) {
+        console.log("updating conversation", message.conversationId);
+        updateConversation(message.conversationId, message.updatedAt);
+      }
     } catch (error) {
       console.error("Error updating message status:", error);
       throw error;

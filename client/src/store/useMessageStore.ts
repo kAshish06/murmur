@@ -34,6 +34,7 @@ const useMessageStore = create<MessageStore>()(
         },
         updateMessage: (message: Message) => {
           set((state) => {
+            console.log("Updating message:", message);
             return {
               messages: {
                 ...state.messages,

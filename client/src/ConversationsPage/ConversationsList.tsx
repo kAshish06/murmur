@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useGetConversations } from "./query/conversationsQuery";
 import useConversationsStore from "../store/useConversationsStore";
+import { getDateString } from "../utils/dateFormatter";
+import { type Conversation } from "./types";
 
 type props = {
-  onConversationSelection: (conversationId: number) => void;
+  onConversationSelection: (conversation: Conversation) => void;
 };
 export default function ConversationsList({ onConversationSelection }: props) {
   const [selectedConversationId, setSelectedConversationId] = useState<
@@ -49,7 +51,7 @@ export default function ConversationsList({ onConversationSelection }: props) {
           } px-3 py-3 rounded-lg cursor-pointer transition-colors duration-200`}
           onClick={() => {
             setSelectedConversationId(conversation.id);
-            onConversationSelection(conversation.id);
+            onConversationSelection(conversation);
           }}
         >
           <div className="flex items-center justify-between">
@@ -57,13 +59,9 @@ export default function ConversationsList({ onConversationSelection }: props) {
               <h3 className="font-semibold">
                 {conversation.otherParticipants[0].username}
               </h3>
-              {/* <p className="text-sm text-gray-600">
-                {conversation.lastMessage?.slice(0, 50)}
-                {conversation.lastMessage?.length > 50 && "..."}
-              </p> */}
             </div>
-            <span className="text-sm">
-              {new Date(conversation.updatedAt).toLocaleTimeString()}
+            <span className="text-xs">
+              {getDateString(conversation.updatedAt)}
             </span>
           </div>
         </div>

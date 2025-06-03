@@ -81,9 +81,13 @@ export interface SocketMessageData {
   content: string;
   createdAt: string;
   status: MessageStatus;
+  conversationUpdatedAt?: Date;
   metadata?: {
     deviceId?: string;
     socketId?: string;
+  };
+  sender?: {
+    id: number;
   };
 }
 

@@ -6,8 +6,8 @@ export type ConversationParticipant = {
 export type Conversation = {
   id: number;
   type: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   otherParticipants: ConversationParticipant[];
   lastMessage: string;
 };

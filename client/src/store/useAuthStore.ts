@@ -4,14 +4,14 @@ import type { User } from "../Auth/types";
 
 interface AuthStore {
   user: User | null;
-  setUser: (user: User) => void;
+  setUser: (user: User | null) => void;
 }
 export const useAuthStore = create<AuthStore>()(
   devtools(
     persist(
       (set) => ({
         user: null,
-        setUser: (user: User) => set({ user }),
+        setUser: (user: User | null) => set({ user }),
       }),
       {
         name: "user",

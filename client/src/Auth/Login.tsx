@@ -1,15 +1,16 @@
-import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
 import Button from "../components/atoms/Button";
 import { useLoginMutation } from "./query/authQuery";
 import { type LoginPayload, type RegisterAndLoginResponse } from "./types";
 import RotatingArrowLoader from "../components/customUtils/RotatingArrowLoader";
 import InputField from "../components/atoms/InputField";
+import useLocalStorage from "../hooks/useLocalStorage";
+import { useAuthStore } from "../store/useAuthStore";
 
 type Props = {
-  onRegisterClick: (modal: "login" | "register") => void;
-  onSuccess: (data: RegisterAndLoginResponse) => void;
-  onError: () => void;
+  closeModal: () => void;
 };
 
 type LoginForm = {
@@ -19,8 +20,22 @@ type LoginForm = {
   password: string;
 };
 
-export default function Login({ onRegisterClick, onSuccess, onError }: Props) {
+export default function Login({ closeModal }: Props) {
+  const { setUser } = useAuthStore();
+  const navigate = useNavigate();
+  const accessToken = useLocalStorage("accessToken", "");
+  const refreshToken = useLocalStorage("refreshToken", "");
   const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
+  const onSuccess = (data: RegisterAndLoginResponse) => {
+    closeModal();
+    accessToken[1](data.token);
+    refreshToken[1](data.refreshToken);
+    setUser(data.user);
+    navigate("/conversations");
+  };
+  const onError = () => {
+    // Notify user about failure via toast
+  };
   const loginMutation = useLoginMutation(onSuccess, onError);
   const {
     register,
@@ -150,13 +165,6 @@ export default function Login({ onRegisterClick, onSuccess, onError }: Props) {
             )}
           </Button>
         </form>
-
-        <p className="text-center text-sm mt-8">
-          Don’t have an account?{" "}
-          <Button btnType="link" onClick={() => onRegisterClick("register")}>
-            Register
-          </Button>
-        </p>
       </div>
     </div>
   );

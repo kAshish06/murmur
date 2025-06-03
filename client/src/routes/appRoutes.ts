@@ -21,7 +21,7 @@ export const appRoutes: AppRoute[] = [
   {
     name: "Conversation",
     path: "/conversations",
-    component: lazy(() => import("../ConversationsPage/ConversationsPage")),
+    component: lazy(() => import("../ConversationsPage/index")),
     isProtected: true,
   },
 ];

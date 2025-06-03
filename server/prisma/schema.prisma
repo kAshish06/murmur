@@ -60,11 +60,20 @@ model UserConversation {
   @@id([userId, conversationId])
 }
 
+enum MessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  SEEN
+  FAILED
+}
+
 model Message {
   id             Int      @id @default(autoincrement())
   conversationId Int
   senderId       Int
   content        String
+  status         MessageStatus @default(PENDING)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

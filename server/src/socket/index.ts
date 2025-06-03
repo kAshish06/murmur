@@ -11,9 +11,22 @@ export interface AuthenticatedSocket extends Socket {
   deviceId?: string;
 }
 
+export type MessageStatus =
+  | "pending"
+  | "sent"
+  | "seen"
+  | "delivered"
+  | "failed";
+
 interface IncomingMessage {
   conversationId: number;
-  text: string;
+  updatedAt: string;
+  id: number;
+  tempId?: string;
+  createdAt: string;
+  senderId?: number;
+  content: string;
+  status: MessageStatus;
 }
 
 /**
@@ -68,9 +81,9 @@ export const initSocketServer = (
           }
 
           const senderId = socket.user.id;
-          const { conversationId, text } = message;
+          const { conversationId, content } = message;
 
-          if (!conversationId || !text) {
+          if (!conversationId || !content) {
             logger.warn(
               `Received invalid message data from user ${senderId}:`,
               message
@@ -89,11 +102,12 @@ export const initSocketServer = (
             );
 
             const rawMessage: RawMessage = {
-              messageId: uuidv4(),
+              messageId: message.id,
+              tempId: message.tempId,
               senderId,
               conversationId,
-              content: text,
-              timestamp: new Date(),
+              content: message.content,
+              timestamp: message.createdAt,
               metadata: {
                 deviceId: socket.deviceId,
                 socketId: socket.id,

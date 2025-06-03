@@ -1,11 +1,13 @@
 import prisma from "../utils/prismaClient";
 import { Message as PrismaMessage } from "@prisma/client";
 import { logger } from "../utils/logger";
+import { MessageStatusEnum } from "../types/messages";
 
 export interface CreateMessagePayload {
   conversationId: number;
   senderId: number;
   content: string;
+  status?: MessageStatusEnum;
 }
 
 /**
@@ -28,6 +30,7 @@ export const createMessage = async (
           connect: { id: data.senderId },
         },
         content: data.content,
+        status: data.status,
       },
     });
     return newMessage;

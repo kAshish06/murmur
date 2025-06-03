@@ -1,11 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGetConversations } from "./query/conversationsQuery";
 import useConversationsStore from "../store/useConversationsStore";
 
 type props = {
-  onConversationSelection: (conversationId: string) => void;
+  onConversationSelection: (conversationId: number) => void;
 };
 export default function ConversationsList({ onConversationSelection }: props) {
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    number | undefined
+  >();
   const { conversations: storedConversations, setConversations } =
     useConversationsStore();
   const {
@@ -35,18 +38,36 @@ export default function ConversationsList({ onConversationSelection }: props) {
   }
 
   return (
-    <div className="">
-      <ul>
-        {storedConversations.map((conversation) => (
-          <li
-            key={conversation.id}
-            className="py-2 cursor-pointer hover:bg-gray-50"
-            onClick={() => onConversationSelection(conversation.id)}
-          >
-            {conversation.otherParticipants[0].username}
-          </li>
-        ))}
-      </ul>
+    <div className="space-y-2 px-1">
+      {storedConversations.map((conversation) => (
+        <div
+          key={conversation.id}
+          className={`${
+            selectedConversationId === conversation.id
+              ? "bg-gray-900 text-white hover:bg-black"
+              : "hover:bg-gray-200"
+          } px-3 py-3 rounded-lg cursor-pointer transition-colors duration-200`}
+          onClick={() => {
+            setSelectedConversationId(conversation.id);
+            onConversationSelection(conversation.id);
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold">
+                {conversation.otherParticipants[0].username}
+              </h3>
+              {/* <p className="text-sm text-gray-600">
+                {conversation.lastMessage?.slice(0, 50)}
+                {conversation.lastMessage?.length > 50 && "..."}
+              </p> */}
+            </div>
+            <span className="text-sm">
+              {new Date(conversation.updatedAt).toLocaleTimeString()}
+            </span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

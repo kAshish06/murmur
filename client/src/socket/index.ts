@@ -3,11 +3,14 @@ import { io, Socket } from "socket.io-client";
 import { useNavigate } from "react-router";
 import useLocalStorage from "../hooks/useLocalStorage";
 import { useRefreshTokenMutation } from "../Auth/query/authQuery";
+import { type Message } from "../ConversationsPage/types";
 
 const SOCKET_SERVER_URL = "http://localhost:4000";
 // "https://murmur-8frr.onrender.com";
 
-export default function useSocketConnect() {
+export default function useSocketConnect(
+  handleSocketReceivedMessage: (data: Message) => void
+) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
@@ -100,8 +103,8 @@ export default function useSocketConnect() {
       setSocket(null);
     });
 
-    newSocket.on("receiveMessage", (msg) => {
-      console.log("Message received from server:", msg);
+    newSocket.on("receiveMessage", (data: Message) => {
+      handleSocketReceivedMessage(data);
     });
 
     newSocket.connect();
@@ -112,7 +115,13 @@ export default function useSocketConnect() {
       newSocket.disconnect();
       setIsConnected(false);
     };
-  }, [accessToken, refreshToken, navigate, mutateRefreshToken]);
+  }, [
+    accessToken,
+    refreshToken,
+    navigate,
+    mutateRefreshToken,
+    handleSocketReceivedMessage,
+  ]);
 
   return { socket, isConnected };
 }

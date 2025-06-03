@@ -1,19 +1,38 @@
+import { Message } from "@prisma/client";
+
 export interface RawMessage {
-  messageId: string;
+  messageId: number | string;
+  tempId?: string;
   senderId: number;
   conversationId: number;
   content: string;
-  timestamp: Date;
+  timestamp: string;
   metadata?: {
     deviceId?: string;
     socketId?: string;
     [key: string]: any;
   };
 }
+export type MessageStatus =
+  | "PENDING"
+  | "SENT"
+  | "SEEN"
+  | "DELIVERED"
+  | "FAILED";
 
-export interface ProcessedMessage extends RawMessage {
-  dbId: number;
-  status: "delivered" | "pending" | "failed";
+export enum MessageStatusEnum {
+  PENDING = "PENDING",
+  SENT = "SENT",
+  SEEN = "SEEN",
+  DELIVERED = "DELIVERED",
+  FAILED = "FAILED",
+}
+
+export interface ProcessedMessage extends Message {
+  id: number;
+  tempId?: string;
+  status: MessageStatus;
+  timestamp: string;
   error?: string;
 }
 
@@ -55,10 +74,13 @@ export const QUEUE_CONFIG: {
 };
 
 export interface SocketMessageData {
-  messageId: string;
+  id: string | number;
+  tempId?: string;
   senderId: number;
+  conversationId: number;
   content: string;
-  timestamp: Date;
+  createdAt: string;
+  status: MessageStatus;
   metadata?: {
     deviceId?: string;
     socketId?: string;

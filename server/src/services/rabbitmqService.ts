@@ -23,10 +23,10 @@ export class RabbitMQService {
       if (this.connection) {
         return;
       }
-
+      console.log("Connecting to RabbitMQ...");
       this.connection = await amqp.connect(rabbitmqConfig.url);
       this.channel = await this.connection.createChannel();
-
+      console.log("Connected to RabbitMQ");
       // Set up queues
       await Promise.all(
         Object.values(QUEUE_CONFIG).map(async (queueConfig) => {
@@ -55,7 +55,7 @@ export class RabbitMQService {
     }
   }
 
-  private async reconnect(): Promise<void> {
+  public async reconnect(): Promise<void> {
     this.connection = null;
     this.channel = null;
     await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait before retrying

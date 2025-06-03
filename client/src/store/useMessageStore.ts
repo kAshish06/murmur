@@ -3,17 +3,18 @@ import { devtools, persist, createJSONStorage } from "zustand/middleware";
 
 import type { Message, ConversationMessage } from "../ConversationsPage/types";
 
-interface MessageStore {
+export interface MessageStore {
   messages: ConversationMessage;
-  setMessages: (messages: Message[], conversationId: string) => void;
-  addMessage: (message: Message, conversationId: string) => void;
+  setMessages: (messages: Message[], conversationId: number) => void;
+  addMessage: (message: Message, conversationId: number) => void;
+  updateMessage: (message: Message) => void;
 }
 const useMessageStore = create<MessageStore>()(
   devtools(
     persist(
       (set) => ({
         messages: {},
-        setMessages: (messages: Message[], conversationId: string) => {
+        setMessages: (messages: Message[], conversationId: number) => {
           set((state) => ({
             messages: {
               ...state.messages,
@@ -21,11 +22,31 @@ const useMessageStore = create<MessageStore>()(
             },
           }));
         },
-        addMessage: (message: Message, conversationId: string) => {
+        addMessage: (message: Message, conversationId: number) => {
           set((state) => {
-            const newState = { ...state };
-            newState.messages[conversationId].push(message);
-            return newState;
+            return {
+              messages: {
+                ...state.messages,
+                [conversationId]: [...state.messages[conversationId], message],
+              },
+            };
+          });
+        },
+        updateMessage: (message: Message) => {
+          set((state) => {
+            return {
+              messages: {
+                ...state.messages,
+                [message.conversationId]: state.messages[
+                  message.conversationId
+                ].map((msg) => {
+                  if (msg.id === message.id || msg.tempId === message.tempId) {
+                    return message;
+                  }
+                  return msg;
+                }),
+              },
+            };
           });
         },
       }),

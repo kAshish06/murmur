@@ -4,6 +4,7 @@ import {
   ProcessedMessage,
   SocketMessageData,
   SocketEvent,
+  MessageStatusEnum,
 } from "../types/messages";
 import { RabbitMQService } from "../services/rabbitmqService";
 import {
@@ -22,13 +23,12 @@ export async function startMessageProcessor() {
           conversationId: message.conversationId,
           senderId: message.senderId,
           content: message.content,
+          status: MessageStatusEnum.SENT,
         });
         const processedMessage: ProcessedMessage = {
           ...savedMessage,
-          status: "pending",
-          dbId: savedMessage.id,
-          messageId: message.messageId,
-          conversationId: message.conversationId,
+          status: MessageStatusEnum.SENT,
+          tempId: message.tempId,
           timestamp: message.timestamp,
         };
         await rabbitMQ.publish(QUEUE_CONFIG.outgoing.name, processedMessage);
@@ -50,18 +50,21 @@ export async function startMessageProcessor() {
         const socketEvent: SocketEvent<SocketMessageData> = {
           type: "message",
           data: {
-            messageId: message.messageId,
+            id: message.id,
+            tempId: message.tempId,
             senderId: message.senderId,
+            conversationId: message.conversationId,
             content: message.content,
-            timestamp: message.timestamp,
+            createdAt: message.timestamp,
+            status: message.status,
           },
           recipientIds: participantIds,
         };
         await rabbitMQ.publish(QUEUE_CONFIG.socket_events.name, socketEvent);
-        // await updateMessageStatus(message.dbId, "delivered");
+        // await updateMessageStatus(message.id, "delivered");
       } catch (error) {
-        // await updateMessageStatus(message.dbId, "failed");
-        logger.error(`Error processing message ${message.messageId}:`, error);
+        // await updateMessageStatus(message.id, "failed");
+        logger.error(`Error processing message ${message.id}:`, error);
       }
     }
   );
@@ -71,7 +74,7 @@ export async function startMessageProcessor() {
       try {
         // TODO: Implement notification logic, will be triggered when user is not online.
       } catch (error) {
-        logger.error(`Error processing message ${message.messageId}:`, error);
+        logger.error(`Error processing message ${message.id}:`, error);
       }
     }
   );

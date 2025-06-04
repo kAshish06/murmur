@@ -7,7 +7,7 @@ RABBITMQ_HOST_EFFECTIVE=${RABBITMQ_HOST:-rabbitmq}
 RABBITMQ_PORT_EFFECTIVE=${RABBITMQ_PORT:-5672}
 
 WAIT_TIMEOUT=60 # seconds
-WAIT_INTERVAL=2 # seconds
+WAIT_INTERVAL=20 # seconds
 
 echo "Waiting for Redis to be available at ${REDIS_HOST_EFFECTIVE}:${REDIS_PORT_EFFECTIVE}..."
 counter=0

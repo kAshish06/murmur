@@ -49,7 +49,7 @@ services:
   # RabbitMQ Private Service
   - type: pserv
     name: murmur-rabbitmq # Name for your RabbitMQ service
-    env: docker # Using a pre-built Docker image
+    env: image # Using a pre-built Docker image
     image: rabbitmq:3.12-management-alpine
     plan: standard # Or your preferred plan
     disks:

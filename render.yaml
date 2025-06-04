@@ -32,6 +32,7 @@ services:
     name: murmur-redis
     plan: free # Explicitly use free plan
     # region: oregon # Optional: specify a region if needed, e.g., oregon, frankfurt
+    ipAllowList: [] # Allow access from other Render services in the same private network
 
 envVarGroups:
   - name: murmur-env

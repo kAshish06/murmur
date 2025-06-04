@@ -32,7 +32,6 @@ services:
     name: murmur-redis
     plan: free # Explicitly use free plan
     # region: oregon # Optional: specify a region if needed, e.g., oregon, frankfurt
-    autoDeploy: yes
 
 envVarGroups:
   - name: murmur-env

@@ -31,6 +31,7 @@ export default function useIntersectionObserver(
 
   useEffect(() => {
     if (!observedElement || !startObserving) return;
+    console.log("starting observing element");
     intersectionObserver.observe(observedElement);
     return () => {
       intersectionObserver.unobserve(observedElement);

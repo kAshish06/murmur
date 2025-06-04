@@ -24,9 +24,16 @@ dotenv.config();
   const server = http.createServer(app);
 
   /** Register middlewares */
-  const whitelist = process.env.CORS_WHITELIST
-    ? process.env.CORS_WHITELIST.split(",").map((origin) => origin.trim())
-    : [];
+  let whitelist: string[] = [];
+  if (process.env.VITE_FRONTEND_URL && process.env.VITE_FRONTEND_URL.trim() !== "") {
+    whitelist = [process.env.VITE_FRONTEND_URL.trim()];
+  } else if (process.env.CORS_WHITELIST) {
+    whitelist = process.env.CORS_WHITELIST.split(",").map((origin) => origin.trim());
+  } else {
+    // Default fallback if neither is set, or adjust as needed
+    // For example, you might want to allow no origins or a specific default
+    console.warn('CORS whitelist is not configured. Allowing requests from no origins.');
+  }
   console.log(whitelist);
   const corsOptions = {
     origin: function (
@@ -72,7 +79,7 @@ dotenv.config();
   startSocketEventProcessor(io);
   initPresenceService(io);
 
-  const PORT = process.env.PORT || 4000;
+  const PORT = process.env.BACKEND_INTERNAL_PORT || 4000;
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });

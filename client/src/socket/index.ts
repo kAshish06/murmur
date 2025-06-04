@@ -6,8 +6,12 @@ import { useRefreshTokenMutation } from "../Auth/query/authQuery";
 import { type Message } from "../ConversationsPage/types";
 import { useAuthStore } from "../store/useAuthStore";
 
-const SOCKET_SERVER_URL = "http://localhost:4000";
-// "https://murmur-8frr.onrender.com";
+const VITE_BACKEND_URL_FOR_SOCKET = import.meta.env.VITE_BACKEND_URL;
+const VITE_FALLBACK_PORT_FOR_SOCKET = import.meta.env.VITE_CLIENT_FALLBACK_PORT || '8080'; // Default to 8080 if not set
+const SOCKET_SERVER_URL = (VITE_BACKEND_URL_FOR_SOCKET && VITE_BACKEND_URL_FOR_SOCKET.trim() !== "") 
+  ? VITE_BACKEND_URL_FOR_SOCKET.trim() 
+  : `http://localhost:${VITE_FALLBACK_PORT_FOR_SOCKET}`; 
+// const SOCKET_SERVER_URL_PRODUCTION = "https://murmur-8frr.onrender.com"; // Example for production
 
 export default function useSocketConnect(
   handleSocketReceivedMessage: (data: Message) => void

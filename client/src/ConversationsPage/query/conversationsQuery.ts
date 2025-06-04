@@ -10,7 +10,7 @@ export function useGetConversations() {
   });
 }
 
-export function useGetMessages(conversationId: number) {
+export function useGetMessages(conversationId: number | undefined) {
   return useQuery<Message[]>({
     queryKey: MESSAGES_QUERY_KEY(conversationId as number),
     queryFn: (): Promise<Message[]> => fetchMessages(conversationId as number),

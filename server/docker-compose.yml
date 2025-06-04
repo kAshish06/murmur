@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      # Map host port (defined by HTTP_PORT in .env, defaulting to 3000) 
+      # to container port (defined by PORT in .env, defaulting to 4000)
+      - "${BACKEND_EXPOSED_HTTP_PORT:-8080}:${BACKEND_INTERNAL_PORT:-4000}"
+    env_file:
+      - ../.env.production
+    environment:
+      # Ensure these point to the Docker service names
+      # These can also be set in the .env file, but setting them here ensures
+      # they use the Docker service names if not overridden by .env
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER:-guest}:${RABBITMQ_DEFAULT_PASS:-guest}@rabbitmq:5672
+      # DATABASE_URL should come from your .env file for Supabase
+    depends_on:
+      - redis
+      - rabbitmq
+    networks:
+      - murmur_network
+    # Optional: For development, you might want to mount volumes for hot-reloading
+    # Be cautious with node_modules and build artifacts if you do this in production.
+    # volumes:
+    #   - ./src:/usr/src/app/src
+    #   - ./prisma:/usr/src/app/prisma
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      # Optionally expose Redis to the host for debugging (e.g., via RedisInsight)
+      # Host port (defined by REDIS_PORT_HOST in .env, defaulting to 6379) to container port 6379
+      - "${REDIS_PORT_HOST:-6379}:6379"
+    networks:
+      - murmur_network
+    env_file:
+      - ../.env.production # To access REDIS_PASSWORD, .env file now in root
+    command: redis-server --aclfile /usr/local/etc/redis/users.acl # Restore ACL command for password protection
+    volumes:
+      # - ./redis.conf:/usr/local/etc/redis/redis.conf # Optional: Mount if you have a custom redis.conf
+      - ../users.acl:/usr/local/etc/redis/users.acl  # Mount the ACL file from project root
+      - redis_data:/data                             # Persistent data volume
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    ports:
+      # AMQP port exposed to host (optional)
+      # Host port (defined by RABBITMQ_PORT_HOST in .env, defaulting to 5672) to container port 5672
+      - "${RABBITMQ_PORT_HOST:-5672}:5672"
+      # RabbitMQ Management UI port exposed to host
+      # Host port (defined by RABBITMQ_MANAGE_PORT_HOST in .env, defaulting to 15672) to container port 15672
+      - "${RABBITMQ_MANAGE_PORT_HOST:-15672}:15672"
+    env_file:
+      - ../.env.production # Loads RABBITMQ_DEFAULT_USER and RABBITMQ_DEFAULT_PASS, .env file now in root
+    networks:
+      - murmur_network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+networks:
+  murmur_network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  rabbitmq_data:

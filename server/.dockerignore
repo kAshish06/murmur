@@ -1,5 +1,26 @@
+# Node
 node_modules
-npm-debug.log
-dist
-.env
+npm-debug.log*
+*.log
 logs
+
+# Build artifacts
+dist
+build
+
+# Docker specific
+Dockerfile
+.dockerignore
+
+# Git
+.git
+.gitignore
+
+# Environment files - keep .env.production for docker-compose env_file
+.env
+.env.*
+!/.env.production
+
+# OS generated files
+.DS_Store
+Thumbs.db

@@ -21,7 +21,6 @@ export default function ConversationPane({
   );
   const [page, setPage] = useState(1);
   const [startObserving, setStartObserving] = useState(false);
-  const messageEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const containerScrollHeightRef = useRef<number>(0);
   const user = useAuthStore((state) => state.user);
@@ -33,35 +32,46 @@ export default function ConversationPane({
   const { getConversationMessages, setMessagesInStore: setMessages } =
     useMessageContext();
 
-  const messages = useMemo(() => {
-    const conversationMessages = getConversationMessages(
-      selectedConversation.id
-    );
-    return conversationMessages.slice(
-      Math.max(conversationMessages.length - PAGE_SIZE * page, 0),
-      conversationMessages.length
-    );
-  }, [page, selectedConversation, getConversationMessages]);
-
   useIntersectionObserver(
     messageStartRef,
     (entry: IntersectionObserverEntry) => {
-      if (entry.isIntersecting && entry.intersectionRatio < 1) {
+      if (entry.isIntersecting && entry.intersectionRatio > 0) {
+        console.log("intersecting");
         containerScrollHeightRef.current =
           containerRef.current?.scrollHeight || 0;
         setPage((prev) => prev + 1);
       }
     },
-    "100px",
+    "10px",
     0.1,
     containerRef.current,
     startObserving
   );
-  const callBackRef = useCallback((node: HTMLDivElement | null) => {
+
+  const messageStartCallbackRef = useCallback((node: HTMLDivElement | null) => {
     if (node) {
       setMessageStartRef(node);
     }
   }, []);
+
+  const messageEndCallbackRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      node.scrollIntoView({ behavior: "smooth" });
+      // setTimeout(() => {
+      setStartObserving(true);
+      // }, 500);
+    }
+  }, []);
+
+  const messages = useMemo(() => {
+    const conversationMessages = getConversationMessages(
+      selectedConversation.id
+    );
+    return conversationMessages?.slice(
+      Math.max(conversationMessages.length - PAGE_SIZE * page, 0),
+      conversationMessages.length
+    );
+  }, [page, selectedConversation, getConversationMessages]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -75,15 +85,6 @@ export default function ConversationPane({
       setMessages(historicalMessages, selectedConversation.id);
     }
   }, [selectedConversation.id, isPending, historicalMessages, setMessages]);
-
-  useEffect(() => {
-    if (historicalMessages?.length) {
-      if (messageEndRef.current) {
-        messageEndRef.current.scrollIntoView({ behavior: "smooth" });
-        setStartObserving(true);
-      }
-    }
-  }, [historicalMessages]);
 
   const getStatusIcon = (status: MessageStatus) => {
     switch (status) {
@@ -124,7 +125,7 @@ export default function ConversationPane({
       {/* Message Area */}
 
       <div className="p-2 overflow-y-auto space-y-4" ref={containerRef}>
-        <div className="h-4" ref={callBackRef}></div>
+        <div className="h-4" ref={messageStartCallbackRef}></div>
         {messages.map((message) => (
           <div key={message.id} className={`flex`}>
             <div className="min-w-[20%] max-w-[70%]">
@@ -150,7 +151,7 @@ export default function ConversationPane({
             </div>
           </div>
         ))}
-        <div ref={messageEndRef}></div>
+        <div ref={messageEndCallbackRef}></div>
       </div>
     </div>
   );

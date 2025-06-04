@@ -1,11 +1,17 @@
-    {
-      "extends": "../tsconfig.json", // Extend your main server tsconfig
-      "compilerOptions": {
-        "module": "CommonJS",       // Seed scripts typically run in Node.js (CommonJS modules)
-        "types": ["node"],          // Include Node.js types
-        "rootDir": "."              // Set rootDir to the current directory (prisma)
-      },
-      "include": [
-        "."                         // Include all files in the current directory (prisma)
-      ]
-    }
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "types": [
+      "node"
+    ],
+    "rootDir": "."
+  },
+  "include": [
+    "."
+  ],
+  "exclude": [
+    "../node_modules",
+    "../dist"
+  ]
+}

@@ -67,30 +67,54 @@ services:
     autoDeploy: yes
 
 envVarGroups:
-  - name: murmur-env # You will create this group in the Render dashboard
+  - name: murmur-env
     envVars:
       - key: JWT_SECRET
+        generateValue: true
       - key: NODE_ENV
-      - key: CORS_WHITELIST # For production, set to your VITE_FRONTEND_URL
+        value: "production" # Typically 'production' for deployed environments
+      - key: CORS_WHITELIST
+        generateValue: true
       - key: DATABASE_URL
+        generateValue: true
       - key: DIRECT_URL
-      - key: BACKEND_INTERNAL_PORT # Primarily for local Docker
-      - key: BACKEND_EXPOSED_HTTP_PORT # Primarily for local Docker
-      - key: VITE_CLIENT_FALLBACK_PORT # Primarily for local client dev
+        generateValue: true
+      - key: BACKEND_INTERNAL_PORT
+        value: "4000" # Default from your .env.production
+      - key: BACKEND_EXPOSED_HTTP_PORT
+        value: "8080" # Default from your .env.production
+      - key: VITE_CLIENT_FALLBACK_PORT
+        value: "8080" # Default from your .env.production
       - key: RABBITMQ_DEFAULT_USER
+        generateValue: true
       - key: RABBITMQ_DEFAULT_PASS
-      - key: RABBITMQ_HOST # Will be overridden by service discovery for backend service
-      - key: RABBITMQ_PORT # Standard 5672
-      - key: RABBITMQ_URL # Ensure your app can construct this from individual parts if needed
-      - key: REDIS_HOST # Will be overridden by service discovery for backend service
-      - key: REDIS_PORT # Standard 6379
+        generateValue: true
+      - key: RABBITMQ_HOST
+        value: "murmur-rabbitmq" # Service discovery name on Render
+      - key: RABBITMQ_PORT
+        value: "5672"
+      - key: RABBITMQ_URL
+        generateValue: true # Will be constructed by the app or set in dashboard
+      - key: REDIS_HOST
+        value: "murmur-redis" # Service discovery name on Render
+      - key: REDIS_PORT
+        value: "6379"
+      # REDIS_PASSWORD is not included as per current nopass setup
       - key: INCOMING_MESSAGES_QUEUE
+        value: "incoming_messages"
       - key: OUTGOING_MESSAGES_QUEUE
+        value: "outgoing_messages"
       - key: NOTIFICATION_MESSAGES_QUEUE
+        value: "notification_messages"
       - key: MESSAGE_PROCESSOR_WORKER_COUNT
+        value: "2"
       - key: MESSAGE_PROCESSOR_RETRY_DELAY
+        value: "5000"
       - key: MESSAGE_PROCESSOR_MAX_RETRIES
-      - key: VITE_BACKEND_URL # This will be the URL Render assigns to murmur-backend
+        value: "3"
+      - key: VITE_BACKEND_URL
+        generateValue: true # This will be the Render URL for murmur-backend
       - key: VITE_FRONTEND_URL
-      # Note: Actual values (especially secrets) should be set in the Render dashboard
-      # for the 'murmur-env' group, not in this YAML file for security.
+        generateValue: true # This will be your frontend's URL
+      - key: VITE_WEBSOCKET_URL
+        generateValue: true # This will be the Render WebSocket URL for murmur-backend

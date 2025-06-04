@@ -95,7 +95,6 @@ class MessageQueueDB {
   }
 
   public async updateMessageStatus(
-    id: number,
     status: MessageStatusType,
     tempId?: string,
     error?: string

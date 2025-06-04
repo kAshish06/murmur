@@ -64,9 +64,7 @@ export async function startMessageProcessor() {
           recipientIds: participantIds,
         };
         await rabbitMQ.publish(QUEUE_CONFIG.socket_events.name, socketEvent);
-        // await updateMessageStatus(message.id, "delivered");
       } catch (error) {
-        // await updateMessageStatus(message.id, "failed");
         logger.error(`Error processing message ${message.id}:`, error);
       }
     }

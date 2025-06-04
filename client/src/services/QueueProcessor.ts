@@ -162,11 +162,7 @@ class QueueProcessor {
   private async updateMessageStatus(message: MessageQueueItem): Promise<void> {
     try {
       // Update database
-      await messageQueueDB.updateMessageStatus(
-        message.id,
-        message.status,
-        message.tempId
-      );
+      await messageQueueDB.updateMessageStatus(message.status, message.tempId);
 
       // Update Zustand store
       const messageStore = useMessageStore.getState();

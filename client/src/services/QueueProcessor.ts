@@ -227,26 +227,6 @@ class QueueProcessor {
     console.error("Socket error:", error);
   }
 
-  private handleMessageStatusUpdate(data: {
-    dbId: string;
-    status: MessageStatus;
-  }): void {
-    try {
-      // Add to status update queue
-      const message = this.queueManager
-        .getStatusUpdateQueue()
-        .find((msg) => msg.id === Number(data.dbId));
-      if (message) {
-        this.queueManager.addToStatusUpdateQueue({
-          ...message,
-          status: data.status,
-        });
-      }
-    } catch (error) {
-      console.error("Error handling message status update:", error);
-    }
-  }
-
   public async cleanup(): Promise<void> {
     clearInterval(this.processingInterval);
     this.processing.clear();

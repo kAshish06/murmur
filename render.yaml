@@ -9,61 +9,29 @@ services:
     dockerfilePath: ./server/Dockerfile # Path from root of your repo
     dockerContext: ./server # Build context for the backend
     # dockerCommand: "" # Optional: if your Dockerfile's CMD is sufficient
-    plan: standard # Or your preferred plan (e.g., starter)
+    plan: free # Using free tier for web service
     envVars:
       - fromGroup: murmur-env # Name of an environment group you create in Render
       # Individual env vars can also be set here if not in a group
       # Render provides PORT automatically.
-      # For service discovery, Render sets internal hostnames:
-      - key: REDIS_HOST
-        value: murmur-redis # This must match the name of your Redis service below
-      - key: REDIS_PORT
-        value: 6379
-      # REDIS_PASSWORD will come from your 'murmur-env' group
-      - key: RABBITMQ_HOST
-        value: murmur-rabbitmq # This must match the name of your RabbitMQ service below
-      - key: RABBITMQ_PORT
-        value: 5672
+      # Connection details for Redis & RabbitMQ will come from the 'murmur-env' group.
+      # For Render's managed Redis:
+      #   - REDIS_HOST will be 'murmur-redis' (service discovery name).
+      #   - REDIS_URL (including password) will be injected by Render.
+      #   - The application (server/src/config/redis.ts) should ideally use REDIS_URL.
+      # For external RabbitMQ:
+      #   - Connection details (RABBITMQ_URL or individual vars) also come from murmur-env.
       # RABBITMQ_DEFAULT_USER & RABBITMQ_DEFAULT_PASS from 'murmur-env'
     autoDeploy: yes # Or no, depending on your preference
     # healthCheckPath: / # Or a specific health check endpoint in your app
 
-  # Redis Private Service
-  - type: pserv
-    name: murmur-redis # Name for your Redis service
-    runtime: docker
-    dockerfilePath: ./redis-config/Dockerfile # Path from root of your repo
-    dockerContext: ./redis-config # Build context for Redis
-    plan: standard # Or your preferred plan
-    disk:
-      name: redis-data
-      mountPath: /data
-      sizeGB: 1 # Or your preferred size
-    envVars:
-      - fromGroup: murmur-env # To get REDIS_PASSWORD
-      # Or set REDIS_PASSWORD directly if not using a group:
-      # - key: REDIS_PASSWORD
-      #   value: your_actual_redis_password
-    autoDeploy: yes
 
-  # RabbitMQ Private Service
-  - type: pserv
-    name: murmur-rabbitmq # Name for your RabbitMQ service
-    runtime: image # Using a pre-built Docker image
-    image:
-      url: rabbitmq:3.12-management-alpine
-    plan: standard # Or your preferred plan
-    disk:
-      name: rabbitmq-data
-      mountPath: /var/lib/rabbitmq
-      sizeGB: 1 # Or your preferred size
-    envVars:
-      - fromGroup: murmur-env # To get RABBITMQ_DEFAULT_USER & RABBITMQ_DEFAULT_PASS
-      # Or set them directly:
-      # - key: RABBITMQ_DEFAULT_USER
-      #   value: your_rabbitmq_user
-      # - key: RABBITMQ_DEFAULT_PASS
-      #   value: your_rabbitmq_password
+
+  # Render Managed Redis (Key Value store)
+  - type: keyvalue
+    name: murmur-redis
+    plan: free # Explicitly use free plan
+    # region: oregon # Optional: specify a region if needed, e.g., oregon, frankfurt
     autoDeploy: yes
 
 envVarGroups:
@@ -90,16 +58,14 @@ envVarGroups:
       - key: RABBITMQ_DEFAULT_PASS
         generateValue: true
       - key: RABBITMQ_HOST
-        value: "murmur-rabbitmq" # Service discovery name on Render
+        generateValue: true # Set this to your external RabbitMQ host
       - key: RABBITMQ_PORT
         value: "5672"
       - key: RABBITMQ_URL
         generateValue: true # Will be constructed by the app or set in dashboard
-      - key: REDIS_HOST
-        value: "murmur-redis" # Service discovery name on Render
-      - key: REDIS_PORT
-        value: "6379"
-      # REDIS_PASSWORD is not included as per current nopass setup
+      # REDIS_HOST, REDIS_PORT, REDIS_PASSWORD for external Redis are removed.
+      # For Render's managed Redis, connection is via REDIS_URL (injected by Render)
+      # and service discovery (host name will be 'murmur-redis').
       - key: INCOMING_MESSAGES_QUEUE
         value: "incoming_messages"
       - key: OUTGOING_MESSAGES_QUEUE

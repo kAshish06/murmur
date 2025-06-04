@@ -11,39 +11,52 @@ export const REDIS_KEYS = {
   USER_PRESENCE: (userId: number) => `user:${userId}:presence`,
 } as const;
 
-// Create Redis client
-const redisHost = process.env.REDIS_HOST || "localhost";
-const redisPort = parseInt(process.env.REDIS_PORT || "6379", 10);
-const redisPassword = process.env.REDIS_PASSWORD;
+let redisClient: Redis;
 
-const redisClientOptions: RedisOptions = {
-  host: redisHost,
-  port: redisPort,
-};
-console.log("Redis password from env ----------------", redisPassword);
-if (redisPassword && redisPassword.trim() !== "") {
-  console.log("Attempting Redis authentication with provided password.");
-  redisClientOptions.password = redisPassword;
-  redisClientOptions.username = "default";
+if (process.env.REDIS_URL) {
+  // If REDIS_URL is provided (e.g., by Render), use it directly
+  redisClient = new Redis(process.env.REDIS_URL, {
+    // Optional: Add TLS options if required by your Redis provider and not in the URL
+    // tls: process.env.REDIS_TLS_ENABLED === 'true' ? { rejectUnauthorized: false } : undefined,
+    retryStrategy: (times) => Math.min(times * 100, 3000), // e.g., retry up to 3s
+    maxRetriesPerRequest: 3, // Optional: Limit retries for a single command
+  });
+  console.log('Attempting to connect to Redis using REDIS_URL');
 } else {
-  console.log(
-    "No Redis password provided or password is empty. Connecting without authentication."
-  );
+  // Fallback to individual host, port, password for local/other environments
+  const redisHost = process.env.REDIS_HOST || 'localhost';
+  const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
+  const redisPassword = process.env.REDIS_PASSWORD;
+
+  const redisClientOptions: RedisOptions = {
+    host: redisHost,
+    port: redisPort,
+    retryStrategy: (times) => Math.min(times * 100, 3000),
+    maxRetriesPerRequest: 3,
+  };
+
+  if (redisPassword && redisPassword.trim() !== '') {
+    redisClientOptions.password = redisPassword;
+    // redisClientOptions.username = 'default'; // Usually not needed if password is in URL or for basic auth
+  }
+  redisClient = new Redis(redisClientOptions);
+  console.log(`Attempting to connect to Redis using host: ${redisHost}, port: ${redisPort}`);
 }
 
-const redisClient = new Redis(redisClientOptions);
-
-// Handle Redis connection events
-redisClient.on("connect", () => {
-  logger.info("Connected to Redis");
+redisClient.on('connect', () => {
+  logger.info('Successfully connected to Redis');
 });
 
-redisClient.on("error", (error) => {
-  logger.error("Redis connection error:", error);
+redisClient.on('error', (err) => {
+  logger.error('Redis connection error:', err);
 });
 
-redisClient.on("close", () => {
-  logger.warn("Redis connection closed");
+redisClient.on('reconnecting', () => {
+  logger.info('Reconnecting to Redis...');
+});
+
+redisClient.on('end', () => {
+  logger.info('Redis connection ended.');
 });
 
 export default redisClient;

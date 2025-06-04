@@ -13,9 +13,7 @@ export const REDIS_KEYS = {
 
 // Create Redis client
 const redisHost = process.env.REDIS_HOST || "localhost";
-const redisPort = process.env.REDIS_PORT
-  ? parseInt(process.env.REDIS_PORT, 10)
-  : 6379;
+const redisPort = parseInt(process.env.REDIS_PORT || "6379", 10);
 const redisPassword = process.env.REDIS_PASSWORD;
 
 const redisClientOptions: RedisOptions = {
@@ -26,9 +24,11 @@ console.log("Redis password from env ----------------", redisPassword);
 if (redisPassword && redisPassword.trim() !== "") {
   console.log("Attempting Redis authentication with provided password.");
   redisClientOptions.password = redisPassword;
-  redisClientOptions.username = "default"; // Explicitly set default username for Redis 6+
+  redisClientOptions.username = "default";
 } else {
-  console.log("No Redis password provided or password is empty. Connecting without authentication.");
+  console.log(
+    "No Redis password provided or password is empty. Connecting without authentication."
+  );
 }
 
 const redisClient = new Redis(redisClientOptions);

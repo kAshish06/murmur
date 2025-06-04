@@ -38,12 +38,12 @@ services:
       - "${REDIS_PORT_HOST:-6379}:6379"
     networks:
       - murmur_network
-    env_file:
-      - ../.env.production # To access REDIS_PASSWORD, .env file now in root
+    # env_file:
+    #   - ../.env.production # To access REDIS_PASSWORD, .env file now in root
     command: redis-server --aclfile /usr/local/etc/redis/users.acl # Restore ACL command for password protection
     volumes:
       # - ./redis.conf:/usr/local/etc/redis/redis.conf # Optional: Mount if you have a custom redis.conf
-      - ../users.acl:/usr/local/etc/redis/users.acl  # Mount the ACL file from project root
+      - ../redis-config/users.acl:/usr/local/etc/redis/users.acl  # Mount the ACL file from project root
       - redis_data:/data                             # Persistent data volume
 
   rabbitmq:

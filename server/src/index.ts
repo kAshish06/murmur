@@ -79,7 +79,7 @@ dotenv.config();
   startSocketEventProcessor(io);
   initPresenceService(io);
 
-  const PORT = process.env.BACKEND_INTERNAL_PORT || 4000;
+  const PORT = process.env.PORT || process.env.BACKEND_INTERNAL_PORT || 4000;
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });

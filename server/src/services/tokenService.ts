@@ -49,16 +49,21 @@ export const findRefreshToken = async (
   try {
     const tokenHash = hashToken(refreshToken);
     const refreshTokenFromDb = await prisma.refreshToken.findUnique({
-      where: {
-        tokenHash: tokenHash,
-      },
-      include: {
-        user: true,
-      },
+      where: { tokenHash },
+      include: { user: true },
     });
+
     if (!refreshTokenFromDb) {
       return { error: INVALID_REFRESH_TOKEN };
     }
+
+    if (new Date() > refreshTokenFromDb.expiresAt) {
+      await prisma.refreshToken.delete({
+        where: { id: refreshTokenFromDb.id },
+      });
+      return { error: INVALID_REFRESH_TOKEN };
+    }
+
     return refreshTokenFromDb;
   } catch (e) {
     return { error: INVALID_REFRESH_TOKEN };

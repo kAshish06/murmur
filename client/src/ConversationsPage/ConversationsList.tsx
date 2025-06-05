@@ -39,6 +39,13 @@ export default function ConversationsList({ onConversationSelection }: Props) {
 
   const createConversationMutation = useCreateConversationMutation(
     (data) => {
+      const existing = storedConversations.find((conv) => conv.id === data.id);
+      if (existing) {
+        setSelectedConversationId(data.id);
+        onConversationSelection(data);
+        setSearchQuery("");
+        return;
+      }
       addConversation(data);
       setSelectedConversationId(data.id);
       onConversationSelection(data);
@@ -67,7 +74,7 @@ export default function ConversationsList({ onConversationSelection }: Props) {
     }
     await createConversationMutation.mutateAsync({
       participantIds: [currentUser.id, user.id],
-      type: "single",
+      type: "private",
     });
   };
 

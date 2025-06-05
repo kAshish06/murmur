@@ -159,8 +159,16 @@ router.post(
         type,
         uniqueParticipantIds
       );
+      const conv = {
+        id: newConversation.id,
+        type: newConversation.type,
+        createdAt: newConversation.createdAt,
+        updatedAt: newConversation.updatedAt,
+        otherParticipants: newConversation.otherParticipants,
+        lastMessage: null,
+      };
 
-      res.status(HTTP_STATUS_CODE_MAP.SUCCESS).json(newConversation);
+      res.status(HTTP_STATUS_CODE_MAP.SUCCESS).json(conv);
     } catch (error: any) {
       next(error);
     }

@@ -96,19 +96,22 @@ export const findUserConversations = async (userId: number) => {
   });
 };
 
-async function findExistingConversation(type: string, participantIds: number[]) {
+async function findExistingConversation(
+  type: string,
+  participantIds: number[]
+) {
   const conversations = await prisma.conversation.findMany({
     where: {
       type,
       participants: {
         every: {
-          userId: { in: participantIds }
+          userId: { in: participantIds },
         },
       },
     },
     include: {
       _count: {
-        select: { participants: true }
+        select: { participants: true },
       },
       participants: {
         include: {
@@ -121,37 +124,75 @@ async function findExistingConversation(type: string, participantIds: number[]) 
   });
 
   return conversations.find(
-    conv => conv._count.participants === participantIds.length
+    (conv) => conv._count.participants === participantIds.length
   );
+}
+
+interface ConversationWithParticipants {
+  id: number;
+  type: string;
+  createdAt: Date;
+  updatedAt: Date;
+  participants: Array<{
+    userId: number;
+    user: {
+      id: number;
+      username: string | null;
+    };
+  }>;
+  messages: Array<{
+    content: string;
+    createdAt: Date;
+    senderId: number;
+  }>;
+}
+
+interface ConversationResponse {
+  id: number;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+  otherParticipants: Array<{ id: number; username: string }>;
+  lastMessage: string | null;
 }
 
 export const createConversation = async (
   type: string,
   uniqueParticipantIds: number[]
-) => {
+): Promise<ConversationResponse> => {
   // First try to find existing conversation without transaction
-  const existingConversation = await findExistingConversation(type, uniqueParticipantIds);
-  if (existingConversation) {
-    return existingConversation;
+  const existing = await findExistingConversation(type, uniqueParticipantIds);
+  if (existing) {
+    return {
+      id: existing.id,
+      type: existing.type || "private",
+      createdAt: existing.createdAt.toISOString(),
+      updatedAt: existing.updatedAt.toISOString(),
+      otherParticipants: existing.participants
+        .filter((p) => p.userId !== uniqueParticipantIds[0])
+        .map((p) => ({
+          id: p.user.id,
+          username: p.user.username || "",
+        })),
+      lastMessage: null,
+    };
   }
 
-  // Only use transaction for the creation part
-  return await prisma.$transaction(async (prisma) => {
-    const conversation = await prisma.conversation.create({
+  // Create new conversation if not exists
+  const result = await prisma.$transaction(async (tx) => {
+    const conversation = await tx.conversation.create({
       data: { type },
     });
 
-    const userConversationData = uniqueParticipantIds.map((userId) => ({
-      userId,
-      conversationId: conversation.id,
-    }));
-
-    await prisma.userConversation.createMany({
-      data: userConversationData,
+    await tx.userConversation.createMany({
+      data: uniqueParticipantIds.map((userId) => ({
+        userId,
+        conversationId: conversation.id,
+      })),
       skipDuplicates: true,
     });
 
-    return prisma.conversation.findUnique({
+    const withDetails = await tx.conversation.findUnique({
       where: { id: conversation.id },
       include: {
         participants: {
@@ -163,7 +204,27 @@ export const createConversation = async (
         },
       },
     });
+
+    if (!withDetails) {
+      throw new Error("Failed to create conversation");
+    }
+
+    return withDetails;
   });
+
+  return {
+    id: result.id,
+    type: result.type || "private",
+    createdAt: result.createdAt.toISOString(),
+    updatedAt: result.updatedAt.toISOString(),
+    otherParticipants: result.participants
+      .filter((p) => p.userId !== uniqueParticipantIds[0])
+      .map((p) => ({
+        id: p.user.id,
+        username: p.user.username || "",
+      })),
+    lastMessage: null,
+  };
 };
 
 /**

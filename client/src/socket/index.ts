@@ -9,10 +9,10 @@ import { useAuthStore } from "../store/useAuthStore";
 const VITE_BACKEND_URL_FOR_SOCKET = import.meta.env.VITE_BACKEND_URL;
 const VITE_FALLBACK_PORT_FOR_SOCKET =
   import.meta.env.VITE_CLIENT_FALLBACK_PORT || "8080";
-const SOCKET_SERVER_URL =
-  VITE_BACKEND_URL_FOR_SOCKET && VITE_BACKEND_URL_FOR_SOCKET.trim() !== ""
-    ? VITE_BACKEND_URL_FOR_SOCKET.trim()
-    : `http://localhost:${VITE_FALLBACK_PORT_FOR_SOCKET}`;
+const SOCKET_SERVER_URL = "https://murmur-backend-5zvw.onrender.com";
+// VITE_BACKEND_URL_FOR_SOCKET && VITE_BACKEND_URL_FOR_SOCKET.trim() !== ""
+//   ? VITE_BACKEND_URL_FOR_SOCKET.trim()
+//   : `http://localhost:${VITE_FALLBACK_PORT_FOR_SOCKET}`;
 
 export default function useSocketConnect(
   handleSocketReceivedMessage: (data: Message) => void

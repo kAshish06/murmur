@@ -8,7 +8,7 @@ import type {
 } from "../types";
 
 export async function fetchUser(): Promise<User> {
-  const { result } = await callApi.get<User>(`/auth/user`);
+  const { result } = await callApi.get<User>(`/user/`);
   return result;
 }
 
@@ -45,5 +45,10 @@ export async function logout(refreshToken: string | null): Promise<void> {
   const { result } = await callApi.post<void>("/auth/logout", {
     refreshToken,
   });
+  return result;
+}
+
+export async function searchUsers(query: string): Promise<User[]> {
+  const { result } = await callApi.get<User[]>(`/user/search?q=${query}`);
   return result;
 }

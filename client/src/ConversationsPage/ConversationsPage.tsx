@@ -70,7 +70,7 @@ export default function ConversationsPage() {
         {isMobileView ? (
           <>
             {showList && (
-              <div className="w-1/3 border-r">
+              <div className="w-2/3 border-r">
                 <ConversationsList
                   onConversationSelection={handleConversationSelection}
                 />
@@ -86,7 +86,7 @@ export default function ConversationsPage() {
         )}
         <div
           className={`${
-            showList ? "w-3/4" : "w-full"
+            showList ? (isMobileView ? "w-1/3" : "w-3/4") : "w-full"
           } flex flex-col justify-between`}
         >
           {!selectedConversation?.id && (

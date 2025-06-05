@@ -8,6 +8,64 @@ import {
   USER_NOT_FOUND,
 } from "../errors/errors";
 
+export interface SearchUserResult {
+  id: number;
+  username: string | null;
+  email: string | null;
+  phone: string | null;
+  countryCode: string | null;
+}
+
+export const searchUsers = async (
+  query: string
+): Promise<SearchUserResult[] | ServiceError> => {
+  try {
+    if (!query || query.trim().length < 2) {
+      return [];
+    }
+
+    const searchQuery = `%${query}%`;
+
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          {
+            username: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
+          },
+          {
+            email: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
+          },
+          {
+            phone: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+      take: 50,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        phone: true,
+        countryCode: true,
+      },
+    });
+
+    return users;
+  } catch (e) {
+    console.error("Error searching users:", e);
+    return { error: INTERNAL_SERVER_ERROR };
+  }
+};
+
 export const registerUser = async (
   username: string,
   phone: string,
@@ -15,7 +73,6 @@ export const registerUser = async (
   email: string,
   password: string
 ): Promise<User | ServiceError> => {
-  let existing;
   try {
     const existingUser = await prisma.user.findFirst({
       where: {

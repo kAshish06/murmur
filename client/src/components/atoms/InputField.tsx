@@ -2,9 +2,9 @@ import React from "react";
 import type { FieldError, UseFormRegisterReturn } from "react-hook-form";
 
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label?: string;
   id: string;
-  registration: UseFormRegisterReturn;
+  registration?: UseFormRegisterReturn;
   error?: FieldError;
   inputClassName?: string;
 }
@@ -14,7 +14,7 @@ export default function InputField({
   id,
   registration,
   error,
-  inputClassName = "w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black",
+  inputClassName,
   ...inputProps
 }: InputFieldProps) {
   return (
@@ -25,7 +25,7 @@ export default function InputField({
       <input
         id={id}
         {...registration}
-        className={inputClassName}
+        className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black ${inputClassName}`}
         {...inputProps}
       />
       {error && <span className="text-xs text-red-500">{error.message}</span>}

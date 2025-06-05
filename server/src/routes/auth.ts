@@ -4,7 +4,6 @@ import {
   registerUser,
   findUserByEmail,
   findUserByPhone,
-  findUserById,
   getSafeUser,
 } from "../services/userService";
 import {
@@ -191,35 +190,6 @@ router.post(
         accessToken: newAccessToken,
         refreshToken: result.refreshToken,
       });
-    } catch (err) {
-      next(err);
-    }
-  }
-);
-
-router.get(
-  "/user",
-  verifyToken,
-  async (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const userIdRaw = req.user?.id;
-      const userId = Number(userIdRaw);
-
-      if (Number.isNaN(userId)) {
-        res.status(USERID_INVALID.code).json({ error: USERID_INVALID });
-        return;
-      }
-
-      const user = await findUserById(userId);
-      if ("error" in user) {
-        res.status(user.error.code).json({ error: user.error });
-        return;
-      }
-      res.status(HTTP_STATUS_CODE_MAP.SUCCESS).json({ user });
     } catch (err) {
       next(err);
     }

@@ -8,11 +8,14 @@ type FormattedResponse<T> = {
   result: T;
 };
 const VITE_BACKEND_URL_ENV = import.meta.env.VITE_BACKEND_URL;
-const VITE_FALLBACK_PORT_ENV = import.meta.env.VITE_CLIENT_FALLBACK_PORT || '8080'; // Default to 8080 if VITE_CLIENT_FALLBACK_PORT is not set
-const BASE_URL =
-  (VITE_BACKEND_URL_ENV && VITE_BACKEND_URL_ENV.trim() !== "")
-    ? VITE_BACKEND_URL_ENV.trim() + "/api"
-    : `http://localhost:${VITE_FALLBACK_PORT_ENV}/api`;
+const VITE_FALLBACK_PORT_ENV =
+  import.meta.env.VITE_CLIENT_FALLBACK_PORT || "8080"; // Default to 8080 if VITE_CLIENT_FALLBACK_PORT is not set
+const BASE_URL = "https://murmur-backend-5zvw.onrender.com/api";
+// (
+//   VITE_BACKEND_URL_ENV && VITE_BACKEND_URL_ENV.trim() !== ""
+// )
+//   ? VITE_BACKEND_URL_ENV.trim() + "/api"
+//   : `http://localhost:${VITE_FALLBACK_PORT_ENV}/api`;
 // const BASE_URL_PRODUCTION = "https://murmur-8frr.onrender.com/api"; // Example for production
 
 async function refreshToken(): Promise<boolean> {

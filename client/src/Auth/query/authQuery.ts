@@ -5,6 +5,7 @@ import {
   refreshTokens,
   fetchUser,
   logout,
+  searchUsers,
 } from "../api/auth";
 import type {
   RegisterUserPayload,
@@ -13,7 +14,7 @@ import type {
   RefreshTokenResponse,
   User,
 } from "../types";
-import { AUTH_QUERY_KEY } from "../queryKeys";
+import { AUTH_QUERY_KEY, getSearchUsersQueryKey } from "../queryKeys";
 
 export function useRegisterUserMutation(
   onSuccess: (data: RegisterAndLoginResponse) => void,
@@ -62,5 +63,13 @@ export function useLogoutMutation(onSuccess: () => void, onError: () => void) {
     mutationFn: async (refreshToken: string | null) => logout(refreshToken),
     onSuccess,
     onError,
+  });
+}
+
+export function useSearchUsersQuery(query: string) {
+  return useQuery<User[]>({
+    queryKey: getSearchUsersQueryKey(query),
+    queryFn: async () => await searchUsers(query),
+    enabled: !!query,
   });
 }

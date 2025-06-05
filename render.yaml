@@ -49,6 +49,8 @@ envVarGroups:
         generateValue: true
       - key: BACKEND_INTERNAL_PORT
         value: "4000" # Default from your .env.production
+      - key: REDIS_URL
+        generateValue: true # Will be injected by Render's managed Redis service
       - key: BACKEND_EXPOSED_HTTP_PORT
         value: "8080" # Default from your .env.production
       - key: VITE_CLIENT_FALLBACK_PORT

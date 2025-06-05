@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { Phone } from "lucide-react";
 import { useGetConversations } from "./query/conversationsQuery";
 import SearchUser from "../components/customUtils/SearchUser";
 import useConversationsStore from "../store/useConversationsStore";
@@ -7,6 +7,9 @@ import { getDateString } from "../utils/dateFormatter";
 import { type Conversation } from "./types";
 import { useSearchUsersQuery } from "../Auth/query/authQuery";
 import RotatingArrowLoader from "../components/customUtils/RotatingArrowLoader";
+import { type User } from "../Auth/types";
+import { useCreateConversationMutation } from "./query/conversationsQuery";
+import { useAuthStore } from "../store/useAuthStore";
 
 type Props = {
   onConversationSelection: (conversation: Conversation) => void;
@@ -17,8 +20,12 @@ export default function ConversationsList({ onConversationSelection }: Props) {
     number | undefined
   >();
   const [searchQuery, setSearchQuery] = useState("");
-  const { conversations: storedConversations, setConversations } =
-    useConversationsStore();
+  const {
+    conversations: storedConversations,
+    setConversations,
+    addConversation,
+  } = useConversationsStore();
+  const { user: currentUser } = useAuthStore();
   const {
     data: searchUsers,
     isPending: isSearchPending,
@@ -29,6 +36,19 @@ export default function ConversationsList({ onConversationSelection }: Props) {
     isPending,
     isError,
   } = useGetConversations();
+
+  const createConversationMutation = useCreateConversationMutation(
+    (data) => {
+      addConversation(data);
+      setSelectedConversationId(data.id);
+      onConversationSelection(data);
+      setSearchQuery("");
+    },
+    (error) => {
+      console.error("Error creating conversation:", error);
+      setSearchQuery("");
+    }
+  );
 
   useEffect(() => {
     if (!isPending && fetchedConversations?.length) {
@@ -41,6 +61,16 @@ export default function ConversationsList({ onConversationSelection }: Props) {
     onConversationSelection(conversation);
   };
 
+  const handleNewConversation = async (user: User) => {
+    if (!currentUser?.id) {
+      return;
+    }
+    await createConversationMutation.mutateAsync({
+      participantIds: [currentUser.id, user.id],
+      type: "single",
+    });
+  };
+
   if (isPending) return <div>Loading conversations...</div>;
   if (isError)
     return <div>Error loading conversations. Please try again later.</div>;
@@ -50,31 +80,30 @@ export default function ConversationsList({ onConversationSelection }: Props) {
     <div className="space-y-2 px-1">
       <SearchUser onSearch={(query) => setSearchQuery(query)} />
       {searchQuery && (
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-end">
-            <X onClick={() => setSearchQuery("")} />
-          </div>
-          <div className="flex flex-1 justify-center">
-            {isSearchPending && (
-              <RotatingArrowLoader>Searching users ...</RotatingArrowLoader>
-            )}
-            {isSearchError && (
-              <div>Error loading users. Please try again later.</div>
-            )}
-            {searchUsers?.map((user) => (
-              <div
-                key={user.id}
-                className={`bg-gray-200 text-gray-900 px-3 py-3 rounded-lg cursor-pointer transition-colors duration-200 hover:`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold">{user.username}</h3>
-                  </div>
-                </div>
+        <>
+          {isSearchPending && (
+            <RotatingArrowLoader>Searching users ...</RotatingArrowLoader>
+          )}
+          {isSearchError && (
+            <div>Error loading users. Please try again later.</div>
+          )}
+          {searchUsers?.map((user) => (
+            <div
+              key={user.id}
+              className="bg-gray-200 text-gray-900 px-3 py-3 rounded-lg cursor-pointer transition-colors duration-200 hover:bg-gray-300"
+              onClick={() => handleNewConversation(user)}
+            >
+              <span className="font-semibold text-left">{user.username}</span>
+              <span>{" - "}</span>
+              <span className="text-xs">{user.email}</span>
+              <div className="flex items-center gap-1 px-1">
+                <Phone size={16} />
+                <span>{" - "}</span>
+                <span className="text-xs">{user.phone}</span>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          ))}
+        </>
       )}
       {!searchQuery &&
         storedConversations.map((conversation) => (

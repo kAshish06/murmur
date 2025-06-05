@@ -13,6 +13,7 @@ export default function SearchUser({
     if (isSearchPending) {
       setIsSearchPending(false);
       setSearchQuery("");
+      onSearch("");
       return;
     }
     onSearch(searchQuery);

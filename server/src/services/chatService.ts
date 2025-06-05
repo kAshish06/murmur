@@ -96,19 +96,53 @@ export const findUserConversations = async (userId: number) => {
   });
 };
 
+async function findExistingConversation(type: string, participantIds: number[]) {
+  const conversations = await prisma.conversation.findMany({
+    where: {
+      type,
+      participants: {
+        every: {
+          userId: { in: participantIds }
+        },
+      },
+    },
+    include: {
+      _count: {
+        select: { participants: true }
+      },
+      participants: {
+        include: {
+          user: {
+            select: { id: true, username: true },
+          },
+        },
+      },
+    },
+  });
+
+  return conversations.find(
+    conv => conv._count.participants === participantIds.length
+  );
+}
+
 export const createConversation = async (
   type: string,
   uniqueParticipantIds: number[]
 ) => {
+  // First try to find existing conversation without transaction
+  const existingConversation = await findExistingConversation(type, uniqueParticipantIds);
+  if (existingConversation) {
+    return existingConversation;
+  }
+
+  // Only use transaction for the creation part
   return await prisma.$transaction(async (prisma) => {
     const conversation = await prisma.conversation.create({
-      data: {
-        type: type,
-      },
+      data: { type },
     });
 
     const userConversationData = uniqueParticipantIds.map((userId) => ({
-      userId: userId,
+      userId,
       conversationId: conversation.id,
     }));
 
@@ -117,7 +151,7 @@ export const createConversation = async (
       skipDuplicates: true,
     });
 
-    const createdConversation = await prisma.conversation.findUnique({
+    return prisma.conversation.findUnique({
       where: { id: conversation.id },
       include: {
         participants: {
@@ -129,8 +163,6 @@ export const createConversation = async (
         },
       },
     });
-
-    return createdConversation;
   });
 };
 

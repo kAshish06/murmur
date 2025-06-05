@@ -14,3 +14,14 @@ export async function fetchMessages(
   );
   return result;
 }
+
+export async function createConversation(
+  participantIds: number[],
+  type: string
+): Promise<Conversation> {
+  const { result } = await callApi.post<Conversation>(`/chat/conversations`, {
+    participantIds,
+    type,
+  });
+  return result;
+}

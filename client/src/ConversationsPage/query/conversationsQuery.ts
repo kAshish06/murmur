@@ -1,5 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetchConversation, fetchMessages } from "../api/conversations";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  fetchConversation,
+  fetchMessages,
+  createConversation,
+} from "../api/conversations";
 import type { Conversation, Message } from "../types";
 import { CONVERSATIONS_QUERY_KEY, MESSAGES_QUERY_KEY } from "../queryKeys";
 
@@ -18,5 +22,17 @@ export function useGetMessages(conversationId: number | undefined) {
       conversationId !== undefined &&
       conversationId !== null &&
       !isNaN(conversationId),
+  });
+}
+
+export function useCreateConversationMutation(
+  onSuccess: (data: Conversation) => void,
+  onError: (data: unknown) => void
+) {
+  return useMutation({
+    mutationFn: async ({ participantIds, type }: { participantIds: number[]; type: string }) =>
+      await createConversation(participantIds, type),
+    onSuccess,
+    onError,
   });
 }

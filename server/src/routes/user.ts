@@ -69,7 +69,7 @@ router.get(
         return;
       }
 
-      res.status(HTTP_STATUS_CODE_MAP.SUCCESS).json({ users: result });
+      res.status(HTTP_STATUS_CODE_MAP.SUCCESS).json(result);
     } catch (error) {
       next(error);
     }

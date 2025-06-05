@@ -17,6 +17,8 @@ export const rabbitmqConfig = {
     tls: {
       rejectUnauthorized: false,
     },
+    // Read vhost from environment variable (e.g., 'chpyqzcf')
+    vhost: process.env.RABBITMQ_VHOST || "/",
   },
 };
 

@@ -17,8 +17,12 @@ export const rabbitmqConfig = {
     tls: {
       rejectUnauthorized: false
     },
-    // Extract vhost from URL
-    vhost: process.env.RABBITMQ_URL?.split('/').pop() || '/'
+    // Properly extract vhost from URL (e.g., /chpyqzcf)
+    vhost: (() => {
+      const url = process.env.RABBITMQ_URL || "";
+      const match = url.match(/\/([^/?]+)(\?|$)/);
+      return match ? `/${match[1]}` : "/";
+    })()
   },
 };
 

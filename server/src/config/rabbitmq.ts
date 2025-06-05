@@ -15,19 +15,13 @@ export const rabbitmqConfig = {
     },
     // Add TLS options since we're using CloudAMQP
     tls: {
-      rejectUnauthorized: false
+      rejectUnauthorized: false,
     },
-    // Properly extract vhost from URL (e.g., /chpyqzcf)
-    vhost: (() => {
-      const url = process.env.RABBITMQ_URL || "";
-      const match = url.match(/\/([^/?]+)(\?|$)/);
-      return match ? `/${match[1]}` : "/";
-    })()
   },
 };
 
 // Add debug logging
-console.log('RabbitMQ configuration:', {
-  url: process.env.RABBITMQ_URL || 'Not set',
-  options: rabbitmqConfig.options
+console.log("RabbitMQ configuration:", {
+  url: process.env.RABBITMQ_URL || "Not set",
+  options: rabbitmqConfig.options,
 });

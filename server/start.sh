@@ -4,8 +4,8 @@
 RABBITMQ_HOST_EFFECTIVE=${RABBITMQ_HOST:-rabbitmq}
 RABBITMQ_PORT_EFFECTIVE=${RABBITMQ_PORT:-5672}
 
-WAIT_TIMEOUT=180 # seconds
-WAIT_INTERVAL=2 # seconds
+WAIT_TIMEOUT=300 # seconds (5 minutes)
+WAIT_INTERVAL=5 # seconds
 
 echo "Waiting for RabbitMQ to be available at ${RABBITMQ_HOST_EFFECTIVE}:${RABBITMQ_PORT_EFFECTIVE}..."
 counter=0
@@ -15,9 +15,13 @@ while ! nc -z "${RABBITMQ_HOST_EFFECTIVE}" "${RABBITMQ_PORT_EFFECTIVE}" >/dev/nu
     echo "Timeout waiting for RabbitMQ. Exiting."
     exit 1
   fi
+  echo "Still waiting for RabbitMQ... (${counter}s elapsed)"
   sleep "$WAIT_INTERVAL"
 done
+
 echo "RabbitMQ is up."
+# Add a small delay to ensure RabbitMQ is fully ready
+sleep 5
 
 echo "Applying Prisma migrations..."
     DATABASE_URL="$DIRECT_URL" npx prisma migrate deploy

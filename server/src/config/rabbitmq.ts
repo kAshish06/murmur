@@ -15,12 +15,14 @@ export const rabbitmqConfig = {
     // Add TLS options since we're using CloudAMQP
     tls: {
       rejectUnauthorized: false
-    }
+    },
+    vhost: process.env.RABBITMQ_DEFAULT_USER || '/' // Use username as vhost
   },
 };
 
 // Add debug logging
 console.log('RabbitMQ configuration:', {
   url: process.env.RABBITMQ_URL || 'Not set',
-  options: rabbitmqConfig.options
+  options: rabbitmqConfig.options,
+  vhost: process.env.RABBITMQ_DEFAULT_USER || '/'
 });

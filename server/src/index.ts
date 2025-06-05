@@ -30,7 +30,7 @@ dotenv.config();
     process.env.VITE_FRONTEND_URL &&
     process.env.VITE_FRONTEND_URL.trim() !== ""
   ) {
-    whitelist = [process.env.VITE_FRONTEND_URL.trim()];
+    whitelist = [process.env.VITE_FRONTEND_URL.trim(), "http://localhost:5173"];
   } else if (process.env.CORS_WHITELIST) {
     whitelist = process.env.CORS_WHITELIST.split(",").map((origin) =>
       origin.trim()

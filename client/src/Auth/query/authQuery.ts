@@ -1,5 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { registerUser, login, refreshTokens, fetchUser } from "../api/auth";
+import {
+  registerUser,
+  login,
+  refreshTokens,
+  fetchUser,
+  logout,
+} from "../api/auth";
 import type {
   RegisterUserPayload,
   RegisterAndLoginResponse,
@@ -48,5 +54,13 @@ export function useGetUserQuery(accessToken: string) {
     queryKey: AUTH_QUERY_KEY,
     queryFn: (): Promise<User> => fetchUser(),
     enabled: !!accessToken,
+  });
+}
+
+export function useLogoutMutation(onSuccess: () => void, onError: () => void) {
+  return useMutation({
+    mutationFn: async (refreshToken: string | null) => logout(refreshToken),
+    onSuccess,
+    onError,
   });
 }

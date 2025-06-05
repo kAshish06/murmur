@@ -115,20 +115,11 @@ export default function ConversationPane({
   console.log(messages);
   return (
     <div className="flex flex-col justify-between flex-1 overflow-hidden">
-      {/* Conversation Header */}
-      <div className="p-4 border-b border-gray-100">
-        <h3 className="text-xl font-semibold text-gray-900">
-          {selectedConversation.otherParticipants[0].username}
-        </h3>
-      </div>
-
-      {/* Message Area */}
-
-      <div className="p-2 overflow-y-auto space-y-4" ref={containerRef}>
+      <div className="py-2 px-4 overflow-y-auto space-y-4" ref={containerRef}>
         <div className="h-4" ref={messageStartCallbackRef}></div>
         {messages.map((message) => (
           <div key={message.id} className={`flex`}>
-            <div className="min-w-[20%] max-w-[70%]">
+            <div className="min-w-[30%] max-w-[95%]">
               <div
                 className={`py-1 px-2 rounded-lg ${
                   message.senderId === user?.id

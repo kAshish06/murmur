@@ -4,40 +4,38 @@ import useConversationsStore from "../store/useConversationsStore";
 import { getDateString } from "../utils/dateFormatter";
 import { type Conversation } from "./types";
 
-type props = {
+type Props = {
   onConversationSelection: (conversation: Conversation) => void;
 };
-export default function ConversationsList({ onConversationSelection }: props) {
+
+export default function ConversationsList({ onConversationSelection }: Props) {
   const [selectedConversationId, setSelectedConversationId] = useState<
     number | undefined
   >();
   const { conversations: storedConversations, setConversations } =
     useConversationsStore();
+
   const {
     data: fetchedConversations,
     isPending,
     isError,
-    error,
   } = useGetConversations();
 
   useEffect(() => {
-    if (!isPending && fetchedConversations && fetchedConversations.length > 0) {
+    if (!isPending && fetchedConversations?.length) {
       setConversations(fetchedConversations);
     }
   }, [fetchedConversations, isPending, setConversations]);
 
-  if (isPending) {
-    return <div>Loading conversations...</div>;
-  }
+  const handleConversationClick = (conversation: Conversation) => {
+    setSelectedConversationId(conversation.id);
+    onConversationSelection(conversation);
+  };
 
-  if (isError) {
-    console.error("Error fetching conversations:", error);
+  if (isPending) return <div>Loading conversations...</div>;
+  if (isError)
     return <div>Error loading conversations. Please try again later.</div>;
-  }
-
-  if (!storedConversations || storedConversations.length === 0) {
-    return <div>No conversations found.</div>;
-  }
+  if (!storedConversations?.length) return <div>No conversations found.</div>;
 
   return (
     <div className="space-y-2 px-1">
@@ -49,10 +47,7 @@ export default function ConversationsList({ onConversationSelection }: props) {
               ? "bg-gray-900 text-white hover:bg-black"
               : "hover:bg-gray-200"
           } px-3 py-3 rounded-lg cursor-pointer transition-colors duration-200`}
-          onClick={() => {
-            setSelectedConversationId(conversation.id);
-            onConversationSelection(conversation);
-          }}
+          onClick={() => handleConversationClick(conversation)}
         >
           <div className="flex items-center justify-between">
             <div>

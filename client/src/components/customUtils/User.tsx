@@ -2,8 +2,26 @@ import { useState } from "react";
 import { User as UserIcon, LogOut, Settings2 } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import Dropdown from "../atoms/Dropdown";
+import { useLogoutMutation } from "../../Auth/query/authQuery";
+import useLocalStorage from "../../hooks/useLocalStorage";
+import { useNavigate } from "react-router";
 
 const User = () => {
+  const navigate = useNavigate();
+  const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
+  const [, setAccessToken] = useLocalStorage("accessToken", "");
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const { user, setUser } = useAuthStore();
+  const onSuccess = () => {
+    setUser(null);
+    setAccessToken("");
+    setRefreshToken("");
+    navigate("/");
+  };
+  const onError = () => {
+    // notify user about logout failure.
+  };
+  const logoutMutation = useLogoutMutation(onSuccess, onError);
   const options = [
     {
       label: "Settings",
@@ -13,11 +31,11 @@ const User = () => {
     {
       label: "Logout",
       icon: <LogOut />,
-      onClick: () => {},
+      onClick: async () => {
+        await logoutMutation.mutateAsync(refreshToken);
+      },
     },
   ];
-  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
-  const { user } = useAuthStore();
   return (
     <div>
       <UserIcon

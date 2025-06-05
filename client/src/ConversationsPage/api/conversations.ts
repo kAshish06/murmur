@@ -2,15 +2,15 @@ import callApi from "../../apiUtils/apiUtil";
 import type { Conversation, Message } from "../types";
 
 export async function fetchConversation(): Promise<Conversation[]> {
-  const response = await callApi.get<Conversation[]>(`/chat/conversations`);
-  return response.result;
+  const { result } = await callApi.get<Conversation[]>(`/chat/conversations`);
+  return result;
 }
 
 export async function fetchMessages(
   conversationId: number
 ): Promise<Message[]> {
-  const response = await callApi.get<Message[]>(
+  const { result } = await callApi.get<Message[]>(
     `/chat/conversations/${conversationId}/messages`
   );
-  return response.result;
+  return result;
 }

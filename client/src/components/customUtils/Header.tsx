@@ -12,7 +12,7 @@ export default function Header() {
   const closeModal = () => setShowLoginModal(false);
   return (
     <>
-      <header className="flex justify-between items-center py-4 px-8">
+      <header className="flex justify-between items-center py-4 px-4">
         <h1 className="text-2xl font-bold">Murmur</h1>
         {user ? (
           <div className="flex items-center gap-4">

@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { Menu } from "lucide-react";
 import ConversationsList from "./ConversationsList";
 import ConversationPane from "./ConversationPane";
 import { useAuthStore } from "../store/useAuthStore";
@@ -6,10 +7,13 @@ import { useMessageContext } from "./context/useMessageContext";
 import { MessageStatus } from "../types/messageQueue";
 import { MessageInput } from "./MessageInput";
 import type { Conversation } from "./types";
+import useMobileView from "../hooks/useMobileView";
 
 export default function ConversationsPage() {
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation>();
+  const isMobileView = useMobileView();
+  const [showList, setShowList] = useState(true);
   const user = useAuthStore((state) => state.user);
   const {
     sendMessage,
@@ -18,8 +22,11 @@ export default function ConversationsPage() {
   const handleConversationSelection = useCallback(
     (conversation: Conversation) => {
       setSelectedConversation(conversation);
+      if (isMobileView) {
+        setShowList(false);
+      }
     },
-    []
+    [isMobileView]
   );
 
   const handleSendMessage = useCallback(
@@ -47,24 +54,55 @@ export default function ConversationsPage() {
   );
 
   return (
-    <div className="flex flex-1 overflow-auto">
-      <div className="w-1/3 border-r">
-        <ConversationsList
-          onConversationSelection={handleConversationSelection}
-        />
-      </div>
-      <div className="w-2/3 flex flex-col justify-between">
-        {!selectedConversation?.id && (
-          <span>Select a contact to view the conversation.</span>
+    <div className="flex flex-col flex-1 overflow-auto">
+      {/* Conversation Header */}
+      {isMobileView && (
+        <div className="flex items-center p-4 border-b border-gray-100">
+          <div className="flex-1">
+            <Menu onClick={() => setShowList((prev) => !prev)} />
+          </div>
+          <h3 className="flex-2 text-left text-xl font-semibold text-gray-900">
+            {selectedConversation?.otherParticipants[0].username}
+          </h3>
+        </div>
+      )}
+      <div className="flex flex-1 overflow-auto">
+        {isMobileView ? (
+          <>
+            {showList && (
+              <div className="w-1/3 border-r">
+                <ConversationsList
+                  onConversationSelection={handleConversationSelection}
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="w-1/4 border-r">
+            <ConversationsList
+              onConversationSelection={handleConversationSelection}
+            />
+          </div>
         )}
-        {selectedConversation?.id && (
-          <ConversationPane selectedConversation={selectedConversation} />
-        )}
+        <div
+          className={`${
+            showList ? "w-3/4" : "w-full"
+          } flex flex-col justify-between`}
+        >
+          {!selectedConversation?.id && (
+            <div className="flex flex-1 items-center justify-center">
+              Select a contact to view the conversation.
+            </div>
+          )}
+          {selectedConversation?.id && (
+            <ConversationPane selectedConversation={selectedConversation} />
+          )}
 
-        <MessageInput
-          onSend={handleSendMessage}
-          disabled={!socket || !isConnected || !selectedConversation?.id}
-        />
+          <MessageInput
+            onSend={handleSendMessage}
+            disabled={!socket || !isConnected || !selectedConversation?.id}
+          />
+        </div>
       </div>
     </div>
   );

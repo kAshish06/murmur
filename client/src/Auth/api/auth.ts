@@ -8,35 +8,42 @@ import type {
 } from "../types";
 
 export async function fetchUser(): Promise<User> {
-  const response = await callApi.get<User>(`/auth/user`);
-  return response.result;
+  const { result } = await callApi.get<User>(`/auth/user`);
+  return result;
 }
 
 export async function registerUser(
   data: RegisterUserPayload
 ): Promise<RegisterAndLoginResponse> {
-  const response = await callApi.post<RegisterAndLoginResponse>(
+  const { result } = await callApi.post<RegisterAndLoginResponse>(
     "/auth/register",
     data
   );
-  return response.result;
+  return result;
 }
 
 export async function login(
   data: LoginPayload
 ): Promise<RegisterAndLoginResponse> {
-  const response = await callApi.post<RegisterAndLoginResponse>(
+  const { result } = await callApi.post<RegisterAndLoginResponse>(
     "/auth/login",
     data
   );
-  return response.result;
+  return result;
 }
 
 export async function refreshTokens(
   refreshToken: string | null
 ): Promise<RefreshTokenResponse> {
-  const response = await callApi.post<RefreshTokenResponse>("/auth/refresh", {
+  const { result } = await callApi.post<RefreshTokenResponse>("/auth/refresh", {
     refreshToken,
   });
-  return response.result;
+  return result;
+}
+
+export async function logout(refreshToken: string | null): Promise<void> {
+  const { result } = await callApi.post<void>("/auth/logout", {
+    refreshToken,
+  });
+  return result;
 }

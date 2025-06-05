@@ -150,6 +150,7 @@ class QueueProcessor {
       await this.handleError(message);
     } finally {
       this.processing.delete(message.id);
+      await this.queueManager.removeFromOutgoingQueue(message.id);
     }
   }
 
@@ -161,13 +162,18 @@ class QueueProcessor {
 
   private async updateMessageStatus(message: MessageQueueItem): Promise<void> {
     try {
+      this.processing.add(message.id);
       // Update database
       await messageQueueDB.updateMessageStatus(message.status, message.tempId);
 
-      // Update Zustand store
+      // Get current state
       const messageStore = useMessageStore.getState();
-      const { updateMessage } = messageStore;
-      updateMessage({
+      const conversationStore = useConversationStore.getState();
+      const { updateMessage, addMessage } = messageStore;
+      const { updateConversation } = conversationStore;
+
+      // Prepare message data
+      const messageData = {
         id: message.id,
         status: message.status,
         updatedAt: message.updatedAt,
@@ -176,16 +182,33 @@ class QueueProcessor {
         content: message.content,
         senderId: message.senderId,
         tempId: message.tempId,
-      });
-      const conversationStore = useConversationStore.getState();
-      const { updateConversation } = conversationStore;
+      };
+
+      // Check if message exists in the store
+      const conversationMessages =
+        messageStore.messages[message.conversationId] || [];
+      const messageExists = conversationMessages.some(
+        (msg) => msg.id === message.id || msg.tempId === message.tempId
+      );
+
+      // Update or add message based on existence
+      if (messageExists) {
+        updateMessage(messageData);
+      } else {
+        addMessage(messageData, message.conversationId);
+      }
+
+      // Update conversation timestamp if needed
       if (message.updatedAt) {
-        console.log("updating conversation", message.conversationId);
+        console.log("Updating conversation timestamp:", message.conversationId);
         updateConversation(message.conversationId, message.updatedAt);
       }
     } catch (error) {
       console.error("Error updating message status:", error);
       throw error;
+    } finally {
+      this.processing.delete(message.id);
+      await this.queueManager.removeFromOutgoingQueue(message.id);
     }
   }
 
@@ -212,6 +235,20 @@ class QueueProcessor {
   private handleSocketDisconnect(reason: string): void {
     console.log("Socket disconnected:", reason);
     // Handle any pending messages
+    this.addUnprocessedMessagesToRetryQueue();
+  }
+
+  private handleSocketError(error: Error): void {
+    console.error("Socket error:", error);
+    this.addUnprocessedMessagesToRetryQueue();
+  }
+
+  public async cleanup(): Promise<void> {
+    clearInterval(this.processingInterval);
+    this.processing.clear();
+  }
+
+  private addUnprocessedMessagesToRetryQueue(): void {
     this.processing.forEach((id) => {
       this.queueManager.addToRetryQueue({
         ...(this.queueManager.getOutgoingQueue().find((msg) => msg.id === id) ||
@@ -221,15 +258,6 @@ class QueueProcessor {
         lastAttempt: Date.now(),
       });
     });
-  }
-
-  private handleSocketError(error: Error): void {
-    console.error("Socket error:", error);
-  }
-
-  public async cleanup(): Promise<void> {
-    clearInterval(this.processingInterval);
-    this.processing.clear();
   }
 }
 

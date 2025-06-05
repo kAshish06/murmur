@@ -15,10 +15,8 @@ export const rabbitmqConfig = {
     },
     // Add TLS options since we're using CloudAMQP
     tls: {
-      rejectUnauthorized: false,
-    },
-    // Read vhost from environment variable (e.g., 'chpyqzcf')
-    vhost: process.env.RABBITMQ_VHOST || "/",
+      rejectUnauthorized: false
+    }
   },
 };
 

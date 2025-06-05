@@ -32,7 +32,8 @@ services:
     name: murmur-redis
     plan: free # Explicitly use free plan
     # region: oregon # Optional: specify a region if needed, e.g., oregon, frankfurt
-    ipAllowList: [] # Allow access from other Render services in the same private network
+    # Allow access from other Render services in the same private network
+    ipAllowList: "*"
 
 envVarGroups:
   - name: murmur-env
@@ -60,11 +61,11 @@ envVarGroups:
       - key: RABBITMQ_DEFAULT_PASS
         generateValue: true
       - key: RABBITMQ_HOST
-        generateValue: true # Set this to your external RabbitMQ host
+        generateValue: true
       - key: RABBITMQ_PORT
-        value: "5672"
+        value: "5671" # CloudAMQP typically uses 5671 for TLS
       - key: RABBITMQ_URL
-        generateValue: true # Will be constructed by the app or set in dashboard
+        generateValue: true
       # REDIS_HOST, REDIS_PORT, REDIS_PASSWORD for external Redis are removed.
       # For Render's managed Redis, connection is via REDIS_URL (injected by Render)
       # and service discovery (host name will be 'murmur-redis').

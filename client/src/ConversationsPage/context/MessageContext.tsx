@@ -30,7 +30,7 @@ export const MessageProvider = ({
     (data: Message): void => {
       try {
         // Add to status update queue
-        queueManager.addToStatusUpdateQueue(data);
+        queueManager.addToIncomingMessageQueue(data);
       } catch (error) {
         console.error("Error handling message confirmation:", error);
       }

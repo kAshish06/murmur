@@ -5,12 +5,12 @@ import { messageQueueDB } from "./messageQueueDB";
 class QueueManager {
   private outgoingQueue: MessageQueueItem[];
   private retryQueue: Map<number, { retries: number; lastAttempt: number }>;
-  private statusUpdateQueue: MessageQueueItem[];
+  private incomingMessageQueue: MessageQueueItem[];
 
   constructor() {
     this.outgoingQueue = [];
     this.retryQueue = new Map();
-    this.statusUpdateQueue = [];
+    this.incomingMessageQueue = [];
     this.initialize();
   }
 
@@ -30,7 +30,7 @@ class QueueManager {
       // Add to respective queues
       pendingMessages.forEach((msg) => this.addToRetryQueue(msg));
       failedMessages.forEach((msg) => this.addToRetryQueue(msg));
-      statusUpdates.forEach((msg) => this.addToStatusUpdateQueue(msg));
+      statusUpdates.forEach((msg) => this.addToIncomingMessageQueue(msg));
     } catch (error) {
       console.error("Failed to initialize queues:", error);
     }
@@ -51,10 +51,12 @@ class QueueManager {
     });
   }
 
-  public async addToStatusUpdateQueue(
+  public async addToIncomingMessageQueue(
     message: Message | MessageQueueItem
   ): Promise<void> {
-    this.statusUpdateQueue.push(this.convertMessageToMessageQueueItem(message));
+    this.incomingMessageQueue.push(
+      this.convertMessageToMessageQueueItem(message)
+    );
   }
 
   public async removeFromOutgoingQueue(messageId: number): Promise<void> {
@@ -67,8 +69,10 @@ class QueueManager {
     this.retryQueue.delete(messageId);
   }
 
-  public async removeFromStatusUpdateQueue(messageId: number): Promise<void> {
-    this.statusUpdateQueue = this.statusUpdateQueue.filter(
+  public async removeFromIncomingMessageQueue(
+    messageId: number
+  ): Promise<void> {
+    this.incomingMessageQueue = this.incomingMessageQueue.filter(
       (msg) => msg.id !== messageId
     );
   }
@@ -90,7 +94,7 @@ class QueueManager {
       .map(
         ([id]) =>
           this.outgoingQueue.find((msg) => msg.id === id) ||
-          this.statusUpdateQueue.find((msg) => msg.id === id)
+          this.incomingMessageQueue.find((msg) => msg.id === id)
       )
       .filter((msg): msg is MessageQueueItem => msg !== undefined);
   }
@@ -104,23 +108,23 @@ class QueueManager {
       .map(
         ([id]) =>
           this.outgoingQueue.find((msg) => msg.id === id) ||
-          this.statusUpdateQueue.find((msg) => msg.id === id)
+          this.incomingMessageQueue.find((msg) => msg.id === id)
       )
       .filter((msg): msg is MessageQueueItem => msg !== undefined);
 
     return size === 0 ? [] : batch.splice(0, size);
   }
 
-  public getStatusUpdateQueue(): MessageQueueItem[] {
-    return [...this.statusUpdateQueue];
+  public getIncomingMessageQueue(): MessageQueueItem[] {
+    return [...this.incomingMessageQueue];
   }
 
-  public getStatusUpdateBatch(size: number): MessageQueueItem[] {
+  public getIncomingMessageBatch(size: number): MessageQueueItem[] {
     if (size < 0) {
       throw new Error("Batch size must be a non-negative number");
     }
 
-    return size === 0 ? [] : this.statusUpdateQueue.splice(0, size);
+    return size === 0 ? [] : this.incomingMessageQueue.splice(0, size);
   }
 
   public async getQueueStats(): Promise<{
@@ -131,7 +135,7 @@ class QueueManager {
     return {
       outgoing: this.outgoingQueue.length,
       retry: this.retryQueue.size,
-      statusUpdate: this.statusUpdateQueue.length,
+      statusUpdate: this.incomingMessageQueue.length,
     };
   }
 

@@ -72,11 +72,11 @@ class QueueProcessor {
   }
 
   private async processStatusUpdateQueue(): Promise<void> {
-    const batch = this.queueManager.getStatusUpdateBatch(this.BATCH_SIZE);
+    const batch = this.queueManager.getIncomingMessageBatch(this.BATCH_SIZE);
 
     if (batch.length > 0) {
       for (const message of batch) {
-        await this.updateMessageStatus(message);
+        await this.handleIncomingMessages(message);
       }
     }
   }
@@ -160,11 +160,19 @@ class QueueProcessor {
     this.socket.emit("sendMessage", message);
   }
 
-  private async updateMessageStatus(message: MessageQueueItem): Promise<void> {
+  private async handleIncomingMessages(
+    message: MessageQueueItem
+  ): Promise<void> {
     try {
       this.processing.add(message.id);
       // Update database
-      await messageQueueDB.updateMessageStatus(message.status, message.tempId);
+      const result = await messageQueueDB.updateMessageStatus(
+        message.status,
+        message.tempId
+      );
+      if ("error" in result) {
+        await messageQueueDB.addMessage(message);
+      }
 
       // Get current state
       const messageStore = useMessageStore.getState();
@@ -215,7 +223,7 @@ class QueueProcessor {
   private async handleError(message: MessageQueueItem): Promise<void> {
     try {
       // Update status to pending with error
-      await this.updateMessageStatus({
+      await this.handleIncomingMessages({
         ...message,
         status: MessageStatus.PENDING,
       });
@@ -253,7 +261,7 @@ class QueueProcessor {
       this.queueManager.addToRetryQueue({
         ...(this.queueManager.getOutgoingQueue().find((msg) => msg.id === id) ||
           this.queueManager
-            .getStatusUpdateQueue()
+            .getIncomingMessageQueue()
             .find((msg) => msg.id === id)!),
         lastAttempt: Date.now(),
       });

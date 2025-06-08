@@ -4,6 +4,7 @@ import {
   type MessageQueueStats,
   type MessageStatusType,
 } from "../types/messageQueue";
+import { MESSAGE_NOT_FOUND_IN_IDB } from "./constants";
 
 class MessageQueueDB {
   private static instance: MessageQueueDB;
@@ -74,9 +75,7 @@ class MessageQueueDB {
     return { store, transaction };
   }
 
-  public async addMessage(
-    message: Omit<MessageQueueItem, "id">
-  ): Promise<number> {
+  public async addMessage(message: MessageQueueItem): Promise<number> {
     const { store } = await this.getStore("messages", "readwrite");
     const request = store.add(message);
     return new Promise((resolve, reject) => {
@@ -96,9 +95,8 @@ class MessageQueueDB {
 
   public async updateMessageStatus(
     status: MessageStatusType,
-    tempId?: string,
-    error?: string
-  ): Promise<MessageQueueItem> {
+    tempId?: string
+  ): Promise<MessageQueueItem | { error: string }> {
     const { store } = await this.getStore("messages", "readwrite");
     const request = store.get(Number(tempId));
     return new Promise((resolve, reject) => {
@@ -108,11 +106,10 @@ class MessageQueueDB {
           message.status = status;
           message.updatedAt = new Date().toISOString();
           if (tempId) message.tempId = tempId;
-          if (error) message.lastError = error;
           store.put(message);
           resolve(message);
         } else {
-          reject(new Error("Message not found"));
+          resolve({ error: MESSAGE_NOT_FOUND_IN_IDB });
         }
       };
       request.onerror = () => reject(request.error);

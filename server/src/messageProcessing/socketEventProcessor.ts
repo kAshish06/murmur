@@ -22,6 +22,9 @@ export async function startSocketEventProcessor(io: SocketIOServer) {
                   "receiveMessage",
                   event.data
                 );
+                logger.info(
+                  `Message ${event.data} sent to user ${id} successfully`
+                );
               } else {
                 // Publish to rabbitmq
                 rabbitMQ.publish(QUEUE_CONFIG.notification.name, event.data);

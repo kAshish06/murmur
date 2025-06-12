@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Phone } from "lucide-react";
 import { useGetConversations } from "./query/conversationsQuery";
-import SearchUser from "../components/customUtils/SearchUser";
+import SearchUser, {
+  type SearchUserRef,
+} from "../components/customUtils/SearchUser";
 import useConversationsStore from "../store/useConversationsStore";
 import { getDateString } from "../utils/dateFormatter";
 import { type Conversation } from "./types";
@@ -20,6 +22,7 @@ export default function ConversationsList({ onConversationSelection }: Props) {
     number | undefined
   >();
   const [searchQuery, setSearchQuery] = useState("");
+  const searchUserRef = useRef<SearchUserRef>(null);
   const {
     conversations: storedConversations,
     setConversations,
@@ -40,6 +43,7 @@ export default function ConversationsList({ onConversationSelection }: Props) {
   const createConversationMutation = useCreateConversationMutation(
     (data) => {
       const existing = storedConversations.find((conv) => conv.id === data.id);
+      searchUserRef.current?.closeSearch();
       if (existing) {
         setSelectedConversationId(data.id);
         onConversationSelection(data);
@@ -85,7 +89,10 @@ export default function ConversationsList({ onConversationSelection }: Props) {
 
   return (
     <div className="space-y-2 px-1">
-      <SearchUser onSearch={(query) => setSearchQuery(query)} />
+      <SearchUser
+        ref={searchUserRef}
+        onSearch={(query) => setSearchQuery(query)}
+      />
       {searchQuery && (
         <>
           {isSearchPending && (

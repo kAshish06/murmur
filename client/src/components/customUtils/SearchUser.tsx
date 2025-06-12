@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle, useCallback } from "react";
 import { Search, X } from "lucide-react";
 import InputField from "../atoms/InputField";
 
-export default function SearchUser({
-  onSearch,
-}: {
-  onSearch: (query: string) => void;
-}) {
+export type SearchUserRef = {
+  closeSearch: () => void;
+};
+
+const SearchUser = forwardRef<
+  SearchUserRef | null,
+  { onSearch: (query: string) => void }
+>(({ onSearch }, ref) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchPending, setIsSearchPending] = useState(false);
-  const handleSearchClose = () => {
+  const handleSearchClose = useCallback(() => {
     if (isSearchPending) {
       setIsSearchPending(false);
       setSearchQuery("");
@@ -18,7 +21,16 @@ export default function SearchUser({
     }
     onSearch(searchQuery);
     setIsSearchPending(true);
-  };
+  }, [isSearchPending, onSearch, searchQuery]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      closeSearch: () => {
+        handleSearchClose();
+      },
+    }),
+    [handleSearchClose]
+  );
 
   return (
     <div className="relative w-full max-w-md">
@@ -50,4 +62,6 @@ export default function SearchUser({
       </div>
     </div>
   );
-}
+});
+
+export default SearchUser;

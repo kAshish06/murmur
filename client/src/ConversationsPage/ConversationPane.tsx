@@ -6,6 +6,7 @@ import { Check, Clock, CheckCheck, CircleAlert } from "lucide-react";
 import { type MessageStatus, type Conversation } from "./types";
 import { MessageStatus as MessageStatusEnum } from "../types/messageQueue";
 import useIntersectionObserver from "../hooks/useIntersectionObserver";
+import useMobileView from "../hooks/useMobileView";
 
 interface ConversationPaneProps {
   selectedConversation: Conversation;
@@ -24,6 +25,7 @@ export default function ConversationPane({
   const containerRef = useRef<HTMLDivElement>(null);
   const containerScrollHeightRef = useRef<number>(0);
   const user = useAuthStore((state) => state.user);
+  const isMobileView = useMobileView();
   const {
     data: historicalMessages,
     isPending,
@@ -118,7 +120,14 @@ export default function ConversationPane({
       <div className="py-2 px-4 overflow-y-auto space-y-4" ref={containerRef}>
         <div className="h-4" ref={messageStartCallbackRef}></div>
         {messages.map((message) => (
-          <div key={message.id} className={`flex`}>
+          <div
+            key={message.id}
+            className={`flex ${
+              !isMobileView && message.senderId === user?.id
+                ? "justify-end"
+                : ""
+            }`}
+          >
             <div className="min-w-[30%] max-w-[95%]">
               <div
                 className={`py-1 px-2 rounded-lg ${

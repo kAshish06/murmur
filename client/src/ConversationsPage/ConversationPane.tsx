@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { EllipsisVertical, Phone, Video } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useGetMessages } from "./query/conversationsQuery";
 import { useMessageContext } from "./context/useMessageContext";
@@ -58,7 +59,7 @@ export default function ConversationPane({
 
   const messageEndCallbackRef = useCallback((node: HTMLDivElement | null) => {
     if (node) {
-      node.scrollIntoView({ behavior: "smooth" });
+      node.scrollIntoView({ behavior: "auto" });
       // setTimeout(() => {
       setStartObserving(true);
       // }, 500);
@@ -117,6 +118,16 @@ export default function ConversationPane({
   console.log(messages);
   return (
     <div className="flex flex-col justify-between flex-1 overflow-hidden">
+      <div className="flex items-center justify-between p-4 border-b border-gray-100 w-full">
+        <h2 className="text-xl font-semibold text-left bg-black-100">
+          {selectedConversation.otherParticipants[0].username}
+        </h2>
+        <div className="flex gap-4">
+          <Phone size={20} />
+          <Video size={20} />
+          <EllipsisVertical size={20} />
+        </div>
+      </div>
       <div className="py-2 px-4 overflow-y-auto space-y-4" ref={containerRef}>
         <div className="h-4" ref={messageStartCallbackRef}></div>
         {messages.map((message) => (

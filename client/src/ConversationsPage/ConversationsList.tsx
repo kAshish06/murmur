@@ -89,10 +89,15 @@ export default function ConversationsList({ onConversationSelection }: Props) {
 
   return (
     <div className="space-y-2 px-1">
-      <SearchUser
-        ref={searchUserRef}
-        onSearch={(query) => setSearchQuery(query)}
-      />
+      <h2 className="text-xl font-semibold text-left p-4 pl-2">
+        Conversations
+      </h2>
+      <div className="pl-2 pb-4 pr-4">
+        <SearchUser
+          ref={searchUserRef}
+          onSearch={(query) => setSearchQuery(query)}
+        />
+      </div>
       {searchQuery && (
         <>
           {isSearchPending && (

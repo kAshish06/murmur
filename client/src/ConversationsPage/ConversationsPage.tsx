@@ -54,8 +54,7 @@ export default function ConversationsPage() {
   );
 
   return (
-    <div className="flex flex-col flex-1 overflow-auto">
-      {/* Conversation Header */}
+    <div className="flex flex-col flex-1 overflow-auto border border-gray-200 rounded-lg">
       {isMobileView && (
         <div className="flex items-center p-4 border-b border-gray-100">
           <div className="flex-1">
@@ -70,7 +69,7 @@ export default function ConversationsPage() {
         {isMobileView ? (
           <>
             {showList && (
-              <div className="w-2/3 border-r">
+              <div className="w-2/3 border-r border-gray-300">
                 <ConversationsList
                   onConversationSelection={handleConversationSelection}
                 />
@@ -78,7 +77,7 @@ export default function ConversationsPage() {
             )}
           </>
         ) : (
-          <div className="w-1/4 border-r">
+          <div className="w-1/4 border-r border-gray-300">
             <ConversationsList
               onConversationSelection={handleConversationSelection}
             />
@@ -95,7 +94,10 @@ export default function ConversationsPage() {
             </div>
           )}
           {selectedConversation?.id && (
-            <ConversationPane selectedConversation={selectedConversation} />
+            <ConversationPane
+              selectedConversation={selectedConversation}
+              key={selectedConversation.id}
+            />
           )}
 
           <MessageInput

@@ -48,7 +48,7 @@ const SearchUser = forwardRef<
         }}
       />
       <div
-        className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+        className="absolute inset-y-0 right-0 flex items-center pr-2 cursor-pointer"
         onClick={handleSearchClose}
         aria-label="Initiate search"
         role="button"

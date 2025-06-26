@@ -42,3 +42,9 @@ export type Message = {
 export type ConversationMessage = {
   [conversationId: string]: Message[];
 };
+
+export type UserPresenceData = {
+  online: boolean;
+  lastSeen: number;
+  devices: Record<string, string>;
+};

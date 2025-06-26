@@ -10,6 +10,7 @@ import errorHandlerMiddleware from "./middleware/errorHandler";
 import authRoutes from "./routes/auth";
 import chatRoutes from "./routes/chat";
 import userRoutes from "./routes/user";
+import presenceRoutes from "./routes/presence";
 import { initSocketServer } from "./socket";
 import responseformatter from "./middleware/responseFormatter";
 import { RabbitMQService } from "./services/rabbitmqService";
@@ -67,6 +68,7 @@ dotenv.config();
   app.use("/api/auth", authRoutes);
   app.use("/api/chat", chatRoutes);
   app.use("/api/user", userRoutes);
+  app.use("/api/presence", presenceRoutes);
 
   /** Initialize error handler */
   app.use(errorHandlerMiddleware);

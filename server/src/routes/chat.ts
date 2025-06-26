@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from "express";
+import express, { Response, NextFunction } from "express";
 import { AuthenticatedRequest, verifyToken } from "../middleware/verifyToken";
 import { USERID_INVALID } from "../errors/errors";
 import {
@@ -7,7 +7,6 @@ import {
   getMessagesForConversation,
 } from "../services/chatService";
 import HTTP_STATUS_CODE_MAP from "../utils/httpStatusCodeMap";
-import prisma from "../utils/prismaClient";
 import { body, validationResult, param } from "express-validator";
 
 const router = express.Router();
@@ -64,7 +63,9 @@ router.get(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        res.status(400).json({ errors: errors.array() });
+        res
+          .status(HTTP_STATUS_CODE_MAP.BAD_REQUEST)
+          .json({ errors: errors.array() });
         return;
       }
 
@@ -124,7 +125,9 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        res.status(400).json({ error: errors.array() });
+        res
+          .status(HTTP_STATUS_CODE_MAP.BAD_REQUEST)
+          .json({ error: errors.array() });
         return;
       }
       const userIdRaw = req.user?.id;
@@ -145,7 +148,7 @@ router.post(
       const uniqueParticipantIds = [...new Set(participantIds)];
 
       if (uniqueParticipantIds.length < 2) {
-        res.status(400).json({
+        res.status(HTTP_STATUS_CODE_MAP.BAD_REQUEST).json({
           message: "A conversation requires at least two participants.",
         });
         return;

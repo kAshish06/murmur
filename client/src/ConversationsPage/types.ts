@@ -1,3 +1,4 @@
+import { type MessageQueueItem } from "../types/messageQueue";
 export type ConversationParticipant = {
   id: number;
   username: string;
@@ -37,6 +38,11 @@ export type Message = {
   content: string;
   sender?: ConversationParticipant;
   status: MessageStatus;
+};
+
+export type SocketReceivedData = {
+  message: Message | MessageQueueItem;
+  conversation?: Conversation;
 };
 
 export type ConversationMessage = {

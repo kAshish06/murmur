@@ -3,7 +3,7 @@ import { io, Socket } from "socket.io-client";
 import { useNavigate } from "react-router";
 import useLocalStorage from "../hooks/useLocalStorage";
 import { useRefreshTokenMutation } from "../Auth/query/authQuery";
-import { type Message } from "../ConversationsPage/types";
+import { type SocketReceivedData } from "../ConversationsPage/types";
 import { useAuthStore } from "../store/useAuthStore";
 
 const VITE_BACKEND_URL_FOR_SOCKET = import.meta.env.VITE_BACKEND_URL;
@@ -16,7 +16,7 @@ const SOCKET_SERVER_URL =
     : `http://localhost:${VITE_FALLBACK_PORT_FOR_SOCKET}`;
 
 export default function useSocketConnect(
-  handleSocketReceivedMessage: (data: Message) => void
+  handleSocketReceivedMessage: (data: SocketReceivedData) => void
 ) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -113,7 +113,7 @@ export default function useSocketConnect(
       setSocket(null);
     });
 
-    newSocket.on("receiveMessage", (data: Message) => {
+    newSocket.on("receiveMessage", (data: SocketReceivedData) => {
       console.log("Received message from socket - ", data);
       handleSocketReceivedMessage(data);
     });

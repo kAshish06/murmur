@@ -1,10 +1,9 @@
 import { Message } from "@prisma/client";
-
-export interface RawMessage {
+import { ConversationResponse } from "../services/chatService";
+interface BaseRawMessage {
   messageId: number | string;
   tempId?: string;
   senderId: number;
-  conversationId: number;
   content: string;
   timestamp: string;
   metadata?: {
@@ -13,6 +12,20 @@ export interface RawMessage {
     [key: string]: any;
   };
 }
+
+interface RawMessageWithConversationId extends BaseRawMessage {
+  conversationId: number;
+  recipientId?: number;
+}
+
+interface RawMessageWithRecipientId extends BaseRawMessage {
+  conversationId?: number;
+  recipientId: number;
+}
+export type RawMessage =
+  | RawMessageWithConversationId
+  | RawMessageWithRecipientId;
+
 export type MessageStatus =
   | "PENDING"
   | "SENT"
@@ -35,6 +48,11 @@ export interface ProcessedMessage extends Message {
   timestamp: string;
   error?: string;
 }
+
+export type ProcessedMessageWithConversation = {
+  message: ProcessedMessage;
+  conversation?: ConversationResponse;
+};
 
 export interface NotificationMessage extends ProcessedMessage {
   deliveryAttempts: number;
@@ -74,21 +92,24 @@ export const QUEUE_CONFIG: {
 };
 
 export interface SocketMessageData {
-  id: string | number;
-  tempId?: string;
-  senderId: number;
-  conversationId: number;
-  content: string;
-  createdAt: string;
-  status: MessageStatus;
-  conversationUpdatedAt?: Date;
-  metadata?: {
-    deviceId?: string;
-    socketId?: string;
+  message: {
+    id: string | number;
+    tempId?: string;
+    senderId: number;
+    conversationId: number;
+    content: string;
+    createdAt: string;
+    status: MessageStatus;
+    conversationUpdatedAt?: Date;
+    metadata?: {
+      deviceId?: string;
+      socketId?: string;
+    };
+    sender?: {
+      id: number;
+    };
   };
-  sender?: {
-    id: number;
-  };
+  conversation?: ConversationResponse;
 }
 
 export interface SocketPresenceData {

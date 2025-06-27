@@ -4,7 +4,8 @@ import QueueManager from "../../services/QueueManager";
 import QueueProcessor from "../../services/QueueProcessor";
 import useSocketConnect from "../../socket";
 import useMessageStore from "../../store/useMessageStore";
-import { type Message } from "../types";
+import { type Message, type SocketReceivedData } from "../types";
+import useConversationsStore from "../../store/useConversationsStore";
 
 export const MessageContext = createContext<{
   getConversationMessages: (conversationId: number) => Message[];
@@ -26,11 +27,15 @@ export const MessageProvider = ({
     (state) => state
   );
   const queueManager = useMemo(() => new QueueManager(), []);
+  const { addConversation } = useConversationsStore();
   const handleSocketReceivedMessage = useCallback(
-    (data: Message): void => {
+    ({ message, conversation }: SocketReceivedData): void => {
       try {
+        if (conversation) {
+          addConversation(conversation);
+        }
         // Add to status update queue
-        queueManager.addToIncomingMessageQueue(data);
+        queueManager.addToIncomingMessageQueue(message);
       } catch (error) {
         console.error("Error handling message confirmation:", error);
       }

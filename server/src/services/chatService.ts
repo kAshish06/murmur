@@ -147,7 +147,7 @@ interface ConversationWithParticipants {
   }>;
 }
 
-interface ConversationResponse {
+export interface ConversationResponse {
   id: number;
   type: string;
   createdAt: string;

@@ -8,7 +8,7 @@ import { type MessageStatus, type Conversation } from "./types";
 import { MessageStatus as MessageStatusEnum } from "../types/messageQueue";
 import useIntersectionObserver from "../hooks/useIntersectionObserver";
 import useMobileView from "../hooks/useMobileView";
-
+import { useUserPresenceQuery } from "./query/presenceQuery";
 interface ConversationPaneProps {
   selectedConversation: Conversation;
 }
@@ -34,6 +34,9 @@ export default function ConversationPane({
   } = useGetMessages(selectedConversation.id);
   const { getConversationMessages, setMessagesInStore: setMessages } =
     useMessageContext();
+  const { data: userPresence } = useUserPresenceQuery(
+    selectedConversation.otherParticipants[0].id
+  );
 
   useIntersectionObserver(
     messageStartRef,
@@ -115,13 +118,15 @@ export default function ConversationPane({
   if (!messages?.length) {
     return <div>This is the start of conversation</div>;
   }
-  console.log(messages);
   return (
     <div className="flex flex-col justify-between flex-1 overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b border-gray-100 w-full">
-        <h2 className="text-xl font-semibold text-left bg-black-100">
-          {selectedConversation.otherParticipants[0].username}
-        </h2>
+        <div>
+          <h2 className="text-xl font-semibold text-left bg-black-100">
+            {selectedConversation.otherParticipants[0].username}
+          </h2>
+          {userPresence?.online ? <div>Online</div> : <div>Offline</div>}
+        </div>
         <div className="flex gap-4">
           <Phone size={20} />
           <Video size={20} />

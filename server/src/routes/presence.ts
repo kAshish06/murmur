@@ -22,12 +22,6 @@ router.get(
       }
       const { userId } = req.params;
       const userPresence = await getUserPresence(Number(userId));
-      if (!userPresence) {
-        res
-          .status(HTTP_STATUS_CODE_MAP.INTERNAL_ERROR)
-          .json({ error: "Could not fetch presence data for user." });
-        return;
-      }
       res.status(HTTP_STATUS_CODE_MAP.SUCCESS).json(userPresence);
     } catch (error) {
       next(error);

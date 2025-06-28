@@ -109,12 +109,16 @@ export default function ConversationsList({ onConversationSelection }: Props) {
           {searchUsers?.map((user) => (
             <div
               key={user.id}
-              className="bg-gray-200 text-gray-900 px-3 py-3 rounded-lg cursor-pointer transition-colors duration-200 hover:bg-gray-300"
+              className="bg-gray-200 text-gray-900 px-3 py-3 rounded-lg cursor-pointer text-left transition-colors duration-200 hover:bg-gray-300"
               onClick={() => handleNewConversation(user)}
             >
-              <span className="font-semibold text-left">{user.username}</span>
-              <span>{" - "}</span>
-              <span className="text-xs">{user.email}</span>
+              <span className="font-semibold">{user.username}</span>
+              {user.email && (
+                <span className="text-xs">
+                  {" - "}
+                  {user.email}
+                </span>
+              )}
               <div className="flex items-center gap-1 px-1">
                 <Phone size={16} />
                 <span>{" - "}</span>

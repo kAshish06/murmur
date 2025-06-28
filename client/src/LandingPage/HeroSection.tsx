@@ -5,7 +5,7 @@ type props = {
 };
 export default function HeroSection({ onRegisterClick }: props) {
   return (
-    <section className="text-center py-10 px-4 sm:px-6 md:py-20">
+    <section className="text-center py-10 px-4 sm:px-6 md:py-10">
       <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
         Conversations. Reimagined.
       </h2>

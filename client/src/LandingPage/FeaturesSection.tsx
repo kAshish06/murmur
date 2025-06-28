@@ -15,7 +15,7 @@ const features = [
 
 export default function FeatureSection() {
   return (
-    <section className="py-12 px-6">
+    <section className="py-10 px-6">
       <h3 className="text-3xl font-bold text-center mb-12">Why Murmur?</h3>
       <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
         {features.map((feature) => (

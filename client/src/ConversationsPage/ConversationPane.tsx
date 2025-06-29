@@ -125,7 +125,11 @@ export default function ConversationPane({
           <h2 className="text-xl font-semibold text-left bg-black-100">
             {selectedConversation.otherParticipants[0].username}
           </h2>
-          {userPresence?.online ? <div>Online</div> : <div>Offline</div>}
+          {userPresence?.online ? (
+            <div className="text-left text-xs text-neutral-500">Online</div>
+          ) : (
+            <div className="text-left text-xs text-neutral-500">Offline</div>
+          )}
         </div>
         <div className="flex gap-4">
           <Phone size={20} />

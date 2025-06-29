@@ -43,7 +43,9 @@ const User = () => {
         className="cursor-pointer"
       />
       <Dropdown isOpen={isOptionsOpen} onClose={() => setIsOptionsOpen(false)}>
-        <div className="text-gray-600">{user?.username}</div>
+        <div className="text-gray-600 border-b p-2 text-left text-lg font-semibold">
+          {user?.username}
+        </div>
         <div className="text-left py-1">
           {options.map((option) => (
             <div

@@ -1,3 +1,4 @@
+import { ACCESS_TOKEN_KEY } from "../constants";
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   data?: unknown;
@@ -51,7 +52,7 @@ async function httpRequest<T>(
       "Content-Type": "application/json",
     },
   };
-  const token = localStorage.getItem("accessToken");
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
   if (token) {
     const parsedToken = JSON.parse(token);
     (config.headers as Record<string, string>)[

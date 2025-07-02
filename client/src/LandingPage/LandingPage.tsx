@@ -6,10 +6,11 @@ import Footer from "./Footer";
 import Modal from "../components/atoms/Modal";
 import Register from "../Auth/Register";
 import useLocalStorage from "../hooks/useLocalStorage";
+import { ACCESS_TOKEN_KEY } from "../constants";
 
 export default function LandingPage() {
   const [showRegisterModal, setShowRegisterModal] = useState<boolean>(false);
-  const accessToken = useLocalStorage("accessToken", "");
+  const accessToken = useLocalStorage(ACCESS_TOKEN_KEY, "");
   const navigate = useNavigate();
   useEffect(() => {
     if (accessToken[0]) {

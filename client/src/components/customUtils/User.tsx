@@ -5,11 +5,15 @@ import Dropdown from "../atoms/Dropdown";
 import { useLogoutMutation } from "../../Auth/query/authQuery";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import { useNavigate } from "react-router";
+import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "../../constants";
 
 const User = () => {
   const navigate = useNavigate();
-  const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
-  const [, setAccessToken] = useLocalStorage("accessToken", "");
+  const [refreshToken, setRefreshToken] = useLocalStorage(
+    REFRESH_TOKEN_KEY,
+    ""
+  );
+  const [, setAccessToken] = useLocalStorage(ACCESS_TOKEN_KEY, "");
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const { user, setUser } = useAuthStore();
   const onSuccess = () => {

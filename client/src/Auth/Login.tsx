@@ -8,6 +8,7 @@ import RotatingArrowLoader from "../components/customUtils/RotatingArrowLoader";
 import InputField from "../components/atoms/InputField";
 import useLocalStorage from "../hooks/useLocalStorage";
 import { useAuthStore } from "../store/useAuthStore";
+import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "../constants";
 
 type Props = {
   closeModal: () => void;
@@ -23,8 +24,8 @@ type LoginForm = {
 export default function Login({ closeModal }: Props) {
   const { setUser } = useAuthStore();
   const navigate = useNavigate();
-  const accessToken = useLocalStorage("accessToken", "");
-  const refreshToken = useLocalStorage("refreshToken", "");
+  const accessToken = useLocalStorage(ACCESS_TOKEN_KEY, "");
+  const refreshToken = useLocalStorage(REFRESH_TOKEN_KEY, "");
   const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
   const onSuccess = (data: RegisterAndLoginResponse) => {
     closeModal();

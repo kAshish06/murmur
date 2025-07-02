@@ -8,6 +8,7 @@ import InputField from "../components/atoms/InputField";
 import useLocalStorage from "../hooks/useLocalStorage";
 import { useAuthStore } from "../store/useAuthStore";
 import { useNavigate } from "react-router";
+import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "../constants";
 
 type Props = {
   closeModal: () => void;
@@ -15,8 +16,8 @@ type Props = {
 
 export default function Register({ closeModal }: Props) {
   const [method, setMethod] = useState<"email" | "phone">("email");
-  const accessToken = useLocalStorage("accessToken", "");
-  const refreshToken = useLocalStorage("refreshToken", "");
+  const accessToken = useLocalStorage(ACCESS_TOKEN_KEY, "");
+  const refreshToken = useLocalStorage(REFRESH_TOKEN_KEY, "");
   const { setUser } = useAuthStore();
   const navigate = useNavigate();
 

@@ -5,6 +5,7 @@ import useLocalStorage from "../hooks/useLocalStorage";
 import { useRefreshTokenMutation } from "../Auth/query/authQuery";
 import { type SocketReceivedData } from "../ConversationsPage/types";
 import { useAuthStore } from "../store/useAuthStore";
+import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "../constants";
 
 const VITE_BACKEND_URL_FOR_SOCKET = import.meta.env.VITE_BACKEND_URL;
 const VITE_FALLBACK_PORT_FOR_SOCKET =
@@ -22,11 +23,11 @@ export default function useSocketConnect(
   const [isConnected, setIsConnected] = useState(false);
 
   const [accessToken, setAccessToken] = useLocalStorage<string | null>(
-    "accessToken",
+    ACCESS_TOKEN_KEY,
     null
   );
   const [refreshToken, setRefreshToken] = useLocalStorage<string | null>(
-    "refreshToken",
+    REFRESH_TOKEN_KEY,
     null
   );
   const navigate = useNavigate();

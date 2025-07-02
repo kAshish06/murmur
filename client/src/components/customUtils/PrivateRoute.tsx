@@ -2,10 +2,11 @@ import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router";
 import useLocalStorage from "../../hooks/useLocalStorage";
 // import { toast } from "react-toastify";
+import { ACCESS_TOKEN_KEY } from "../../constants";
 
 const PrivateRoute = () => {
   const navigate = useNavigate();
-  const [accessToken] = useLocalStorage("accessToken", "");
+  const [accessToken] = useLocalStorage(ACCESS_TOKEN_KEY, "");
 
   useEffect(() => {
     if (!accessToken) {

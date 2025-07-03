@@ -24,10 +24,11 @@ const useMessageStore = create<MessageStore>()(
         },
         addMessage: (message: Message, conversationId: number) => {
           set((state) => {
+            const existingMessages = state.messages[conversationId] || [];
             return {
               messages: {
                 ...state.messages,
-                [conversationId]: [...state.messages[conversationId], message],
+                [conversationId]: [...existingMessages, message],
               },
             };
           });

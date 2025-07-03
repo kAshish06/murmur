@@ -11,6 +11,7 @@ export type Conversation = {
   updatedAt: string;
   otherParticipants: ConversationParticipant[];
   lastMessage: string;
+  isTemporary?: boolean;
 };
 
 export type MessageStatus =

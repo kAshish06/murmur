@@ -14,11 +14,15 @@ export function useGetConversations() {
   });
 }
 
-export function useGetMessages(conversationId: number | undefined) {
+export function useGetMessages(
+  conversationId: number | undefined,
+  isTemporary: boolean | undefined
+) {
   return useQuery<Message[]>({
     queryKey: MESSAGES_QUERY_KEY(conversationId as number),
     queryFn: (): Promise<Message[]> => fetchMessages(conversationId as number),
     enabled:
+      !isTemporary &&
       conversationId !== undefined &&
       conversationId !== null &&
       !isNaN(conversationId),
@@ -30,8 +34,13 @@ export function useCreateConversationMutation(
   onError: (data: unknown) => void
 ) {
   return useMutation({
-    mutationFn: async ({ participantIds, type }: { participantIds: number[]; type: string }) =>
-      await createConversation(participantIds, type),
+    mutationFn: async ({
+      participantIds,
+      type,
+    }: {
+      participantIds: number[];
+      type: string;
+    }) => await createConversation(participantIds, type),
     onSuccess,
     onError,
   });

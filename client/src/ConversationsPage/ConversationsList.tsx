@@ -10,7 +10,6 @@ import { type Conversation } from "./types";
 import { useSearchUsersQuery } from "../Auth/query/authQuery";
 import RotatingArrowLoader from "../components/customUtils/RotatingArrowLoader";
 import { type User } from "../Auth/types";
-import { useCreateConversationMutation } from "./query/conversationsQuery";
 import { useAuthStore } from "../store/useAuthStore";
 
 type Props = {
@@ -40,27 +39,6 @@ export default function ConversationsList({ onConversationSelection }: Props) {
     isError,
   } = useGetConversations();
 
-  const createConversationMutation = useCreateConversationMutation(
-    (data) => {
-      const existing = storedConversations.find((conv) => conv.id === data.id);
-      searchUserRef.current?.closeSearch();
-      if (existing) {
-        setSelectedConversationId(data.id);
-        onConversationSelection(data);
-        setSearchQuery("");
-        return;
-      }
-      addConversation(data);
-      setSelectedConversationId(data.id);
-      onConversationSelection(data);
-      setSearchQuery("");
-    },
-    (error) => {
-      console.error("Error creating conversation:", error);
-      setSearchQuery("");
-    }
-  );
-
   useEffect(() => {
     if (!isPending && fetchedConversations?.length) {
       setConversations(fetchedConversations);
@@ -76,10 +54,27 @@ export default function ConversationsList({ onConversationSelection }: Props) {
     if (!currentUser?.id) {
       return;
     }
-    await createConversationMutation.mutateAsync({
-      participantIds: [currentUser.id, user.id],
-      type: "private",
-    });
+    const existingConversation = storedConversations.find(
+      (conv) => conv.otherParticipants[0].id === user.id
+    );
+    let conversation: Conversation;
+    if (existingConversation) {
+      conversation = existingConversation;
+    } else {
+      conversation = {
+        id: Date.now(),
+        type: "private",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        otherParticipants: [{ id: user.id, username: user.username }],
+        lastMessage: "",
+        isTemporary: true,
+      };
+      addConversation(conversation);
+    }
+    setSelectedConversationId(conversation.id);
+    onConversationSelection(conversation);
+    setSearchQuery("");
   };
 
   if (isPending) return <div>Loading conversations...</div>;

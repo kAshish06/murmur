@@ -31,7 +31,7 @@ export default function ConversationPane({
     data: historicalMessages,
     isPending,
     isError,
-  } = useGetMessages(selectedConversation.id);
+  } = useGetMessages(selectedConversation.id, selectedConversation.isTemporary);
   const { getConversationMessages, setMessagesInStore: setMessages } =
     useMessageContext();
   const { data: userPresence } = useUserPresenceQuery(
@@ -109,10 +109,10 @@ export default function ConversationPane({
     }
   };
 
-  if (isPending) {
+  if (!selectedConversation.isTemporary && isPending) {
     return <div>Loading messages ...</div>;
   }
-  if (isError) {
+  if (!selectedConversation.isTemporary && isError) {
     return <div>Error loading messages. Try again later.</div>;
   }
   if (!messages?.length) {

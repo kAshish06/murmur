@@ -39,6 +39,7 @@ export type Message = {
   content: string;
   sender?: ConversationParticipant;
   status: MessageStatus;
+  recipientId?: number;
 };
 
 export type SocketReceivedData = {

@@ -35,7 +35,7 @@ export default function ConversationsPage() {
 
       console.log("Sending message:", message);
       const tempId = Date.now();
-      sendMessage({
+      const messagePayload = {
         id: tempId,
         tempId: tempId.toString(),
         conversationId: Number(selectedConversation.id),
@@ -48,7 +48,13 @@ export default function ConversationsPage() {
           username: user?.username,
         },
         status: MessageStatus.PENDING,
-      });
+        recipientId: 0,
+      };
+      if (selectedConversation.isTemporary) {
+        messagePayload.recipientId =
+          selectedConversation.otherParticipants[0].id;
+      }
+      sendMessage(messagePayload);
     },
     [socket, isConnected, user, selectedConversation, sendMessage]
   );

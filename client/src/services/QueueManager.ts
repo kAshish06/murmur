@@ -155,6 +155,7 @@ class QueueManager {
       retries: 0,
       lastError: undefined,
       lastAttempt: undefined,
+      recipientId: message.recipientId,
     };
   }
 }

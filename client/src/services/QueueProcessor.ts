@@ -135,6 +135,7 @@ class QueueProcessor {
           username: "",
         },
         status: MessageStatus.PENDING,
+        recipientId: message.recipientId,
       };
       const messageStore = useMessageStore.getState();
       const { addMessage } = messageStore;

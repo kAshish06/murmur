@@ -27,12 +27,12 @@ export const MessageProvider = ({
     (state) => state
   );
   const queueManager = useMemo(() => new QueueManager(), []);
-  const { addConversation } = useConversationsStore();
+  const { replaceTemporaryConversation } = useConversationsStore();
   const handleSocketReceivedMessage = useCallback(
     ({ message, conversation }: SocketReceivedData): void => {
       try {
         if (conversation) {
-          addConversation(conversation);
+          replaceTemporaryConversation(conversation);
         }
         // Add to status update queue
         queueManager.addToIncomingMessageQueue(message);
@@ -40,7 +40,7 @@ export const MessageProvider = ({
         console.error("Error handling message confirmation:", error);
       }
     },
-    [queueManager]
+    [queueManager, replaceTemporaryConversation]
   );
 
   const socket = useSocketConnect(handleSocketReceivedMessage);

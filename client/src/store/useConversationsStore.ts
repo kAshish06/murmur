@@ -8,6 +8,9 @@ interface ConversationStore {
   setConversations: (conversations: Conversation[]) => void;
   addConversation: (conversation: Conversation) => void;
   updateConversation: (conversationId: number, updatedAt: string) => void;
+  replaceTemporaryConversation: (
+    conversation: Conversation & { oldConversationId?: number }
+  ) => void;
 }
 
 const useConversationsStore = create<ConversationStore>()(
@@ -27,6 +30,18 @@ const useConversationsStore = create<ConversationStore>()(
               conv.id === conversationId ? { ...conv, updatedAt } : conv
             ),
           })),
+        replaceTemporaryConversation: (conversation) =>
+          set((state) => {
+            const existingConversationIndex = state.conversations?.findIndex(
+              (conv) => conv.id === conversation.oldConversationId
+            );
+            delete conversation.oldConversationId;
+            const newConversations = [...state.conversations];
+            newConversations[existingConversationIndex] = conversation;
+            return {
+              conversations: newConversations,
+            };
+          }),
       }),
       {
         name: "conversations",

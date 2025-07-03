@@ -10,6 +10,7 @@ export interface MessageQueueItem {
   retries?: number;
   lastError?: string;
   lastAttempt?: number;
+  recipientId?: number;
 }
 export type MessageStatusType =
   | "PENDING"

@@ -37,22 +37,24 @@ export async function startMessageProcessor() {
           updatedAt: new Date(),
         };
         let conversation: ConversationResponse | undefined;
-        if (message.conversationId) {
-          const newMessage = await createMessage({
-            conversationId: message.conversationId,
-            senderId: message.senderId,
-            content: message.content,
-            status: MessageStatusEnum.SENT,
-          });
-          savedMessage = newMessage.message;
-        } else if (message.recipientId) {
+        if (message.recipientId) {
           /** Create a conversation first and then create a message */
           conversation = await createConversation("private", [
             message.recipientId,
             message.senderId,
           ]);
+          logger.info("created conversation - ", conversation);
           const newMessage = await createMessage({
             conversationId: conversation.id,
+            senderId: message.senderId,
+            content: message.content,
+            status: MessageStatusEnum.SENT,
+          });
+          logger.info("created message - ", newMessage);
+          savedMessage = newMessage.message;
+        } else if (message.conversationId) {
+          const newMessage = await createMessage({
+            conversationId: message.conversationId,
             senderId: message.senderId,
             content: message.content,
             status: MessageStatusEnum.SENT,
@@ -66,8 +68,13 @@ export async function startMessageProcessor() {
             tempId: message.tempId,
             timestamp: message.timestamp,
           },
-          conversation,
         };
+        if (conversation) {
+          processedMessage.conversation = {
+            ...conversation,
+            oldConversationId: message.conversationId,
+          };
+        }
         await rabbitMQ.publish(QUEUE_CONFIG.outgoing.name, processedMessage);
         logger.info(
           `Message ${message.messageId} processed and pushed to outgoing queue`

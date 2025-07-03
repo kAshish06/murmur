@@ -20,6 +20,7 @@ export type MessageStatus =
 
 interface IncomingMessage {
   conversationId: number;
+  recipientId?: number;
   updatedAt: string;
   id: number;
   tempId?: string;
@@ -81,9 +82,9 @@ export const initSocketServer = (
           }
 
           const senderId = socket.user.id;
-          const { conversationId, content } = message;
+          const { conversationId, content, recipientId } = message;
 
-          if (!conversationId || !content) {
+          if ((!conversationId && !recipientId) || !content) {
             logger.warn(
               `Received invalid message data from user ${senderId}:`,
               message
@@ -97,15 +98,11 @@ export const initSocketServer = (
           }
 
           try {
-            logger.info(
-              `Publishing message for Conversation ${conversationId} from User ${senderId} to incoming queue`
-            );
-
             const rawMessage: RawMessage = {
               messageId: message.id,
               tempId: message.tempId,
-              senderId,
               conversationId,
+              senderId,
               content: message.content,
               timestamp: message.createdAt,
               metadata: {
@@ -113,6 +110,10 @@ export const initSocketServer = (
                 socketId: socket.id,
               },
             };
+            if (recipientId) {
+              logger.info("message received with recipientId");
+              rawMessage.recipientId = recipientId;
+            }
 
             await RabbitMQService.getInstance().publish(
               QUEUE_CONFIG.incoming.name,

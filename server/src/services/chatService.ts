@@ -154,6 +154,7 @@ export interface ConversationResponse {
   updatedAt: string;
   otherParticipants: Array<{ id: number; username: string }>;
   lastMessage: string | null;
+  oldConversationId?: number;
 }
 
 export const createConversation = async (

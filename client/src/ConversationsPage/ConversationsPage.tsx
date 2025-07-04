@@ -6,12 +6,10 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useMessageContext } from "./context/useMessageContext";
 import { MessageStatus } from "../types/messageQueue";
 import { MessageInput } from "./MessageInput";
-import type { Conversation } from "./types";
 import useMobileView from "../hooks/useMobileView";
+import useSelectedConversation from "../store/selectors/useSelectedConversation";
 
 export default function ConversationsPage() {
-  const [selectedConversation, setSelectedConversation] =
-    useState<Conversation>();
   const isMobileView = useMobileView();
   const [showList, setShowList] = useState(true);
   const user = useAuthStore((state) => state.user);
@@ -19,15 +17,12 @@ export default function ConversationsPage() {
     sendMessage,
     socket: { socket, isConnected },
   } = useMessageContext();
-  const handleConversationSelection = useCallback(
-    (conversation: Conversation) => {
-      setSelectedConversation(conversation);
-      if (isMobileView) {
-        setShowList(false);
-      }
-    },
-    [isMobileView]
-  );
+  const selectedConversation = useSelectedConversation();
+  const handleConversationSelection = useCallback(() => {
+    if (isMobileView) {
+      setShowList(false);
+    }
+  }, [isMobileView]);
 
   const handleSendMessage = useCallback(
     (message: string) => {
@@ -94,21 +89,23 @@ export default function ConversationsPage() {
             showList ? (isMobileView ? "w-1/3" : "w-3/4") : "w-full"
           } flex flex-col justify-between`}
         >
-          {!selectedConversation?.id && (
+          {!selectedConversation?.clientId && (
             <div className="flex flex-1 items-center justify-center">
               Select a contact to view the conversation.
             </div>
           )}
-          {selectedConversation?.id && (
+          {selectedConversation?.clientId && (
             <ConversationPane
               selectedConversation={selectedConversation}
-              key={selectedConversation.id}
+              key={selectedConversation.clientId}
             />
           )}
 
           <MessageInput
             onSend={handleSendMessage}
-            disabled={!socket || !isConnected || !selectedConversation?.id}
+            disabled={
+              !socket || !isConnected || !selectedConversation?.clientId
+            }
           />
         </div>
       </div>

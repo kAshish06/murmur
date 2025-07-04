@@ -9,6 +9,8 @@ interface ConversationStore {
   addConversation: (conversation: Conversation) => void;
   updateConversation: (conversationId: number, updatedAt: string) => void;
   replaceTemporaryConversation: (conversation: Conversation) => void;
+  selectedConversationId: number | undefined;
+  setSelectedConversationId: (id: number) => void;
 }
 
 const useConversationsStore = create<ConversationStore>()(
@@ -16,6 +18,11 @@ const useConversationsStore = create<ConversationStore>()(
     persist(
       (set) => ({
         conversations: [],
+        selectedConversationId: undefined,
+        setSelectedConversationId: (id) =>
+          set({
+            selectedConversationId: id,
+          }),
         setConversations: (conversations: Conversation[]) =>
           set({ conversations }),
         addConversation: (conversation: Conversation) =>

@@ -17,15 +17,14 @@ type Props = {
 };
 
 export default function ConversationsList({ onConversationSelection }: Props) {
-  const [selectedConversationId, setSelectedConversationId] = useState<
-    number | undefined
-  >();
   const [searchQuery, setSearchQuery] = useState("");
   const searchUserRef = useRef<SearchUserRef>(null);
   const {
     conversations: storedConversations,
+    selectedConversationId,
     setConversations,
     addConversation,
+    setSelectedConversationId,
   } = useConversationsStore();
   const { user: currentUser } = useAuthStore();
   const {

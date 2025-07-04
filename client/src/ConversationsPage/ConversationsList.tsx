@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { Phone } from "lucide-react";
 import { useGetConversations } from "./query/conversationsQuery";
 import SearchUser, {
   type SearchUserRef,
@@ -7,10 +6,9 @@ import SearchUser, {
 import useConversationsStore from "../store/useConversationsStore";
 import { getDateString } from "../utils/dateFormatter";
 import { type Conversation } from "./types";
-import { useSearchUsersQuery } from "../Auth/query/authQuery";
-import RotatingArrowLoader from "../components/customUtils/RotatingArrowLoader";
 import { type User } from "../Auth/types";
 import { useAuthStore } from "../store/useAuthStore";
+import { SearchedUserList } from "../components/customUtils/SearchedUserList";
 
 type Props = {
   onConversationSelection: (conversation: Conversation) => void;
@@ -28,11 +26,6 @@ export default function ConversationsList({ onConversationSelection }: Props) {
   } = useConversationsStore();
   const { user: currentUser } = useAuthStore();
   const {
-    data: searchUsers,
-    isPending: isSearchPending,
-    isError: isSearchError,
-  } = useSearchUsersQuery(searchQuery);
-  const {
     data: fetchedConversations,
     isPending,
     isError,
@@ -49,7 +42,7 @@ export default function ConversationsList({ onConversationSelection }: Props) {
     onConversationSelection(conversation);
   };
 
-  const handleNewConversation = async (user: User) => {
+  const handleSearchedUserClick = async (user: User) => {
     if (!currentUser?.id) {
       return;
     }
@@ -94,36 +87,10 @@ export default function ConversationsList({ onConversationSelection }: Props) {
           onSearch={(query) => setSearchQuery(query)}
         />
       </div>
-      {searchQuery && (
-        <>
-          {isSearchPending && (
-            <RotatingArrowLoader>Searching users ...</RotatingArrowLoader>
-          )}
-          {isSearchError && (
-            <div>Error loading users. Please try again later.</div>
-          )}
-          {searchUsers?.map((user) => (
-            <div
-              key={user.id}
-              className="bg-gray-200 text-gray-900 px-3 py-3 rounded-lg cursor-pointer text-left transition-colors duration-200 hover:bg-gray-300"
-              onClick={() => handleNewConversation(user)}
-            >
-              <span className="font-semibold">{user.username}</span>
-              {user.email && (
-                <span className="text-xs">
-                  {" - "}
-                  {user.email}
-                </span>
-              )}
-              <div className="flex items-center gap-1 px-1">
-                <Phone size={16} />
-                <span>{" - "}</span>
-                <span className="text-xs">{user.phone}</span>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
+      <SearchedUserList
+        searchQuery={searchQuery}
+        handleUserClick={handleSearchedUserClick}
+      />
       {!searchQuery &&
         storedConversations.map((conversation) => (
           <div

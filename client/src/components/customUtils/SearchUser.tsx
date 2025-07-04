@@ -22,6 +22,7 @@ const SearchUser = forwardRef<
     onSearch(searchQuery);
     setIsSearchPending(true);
   }, [isSearchPending, onSearch, searchQuery]);
+  /** Use imperative handle */
   useImperativeHandle(
     ref,
     () => ({

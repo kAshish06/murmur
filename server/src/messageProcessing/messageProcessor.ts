@@ -40,8 +40,8 @@ export async function startMessageProcessor() {
         if (message.recipientId) {
           /** Create a conversation first and then create a message */
           conversation = await createConversation("private", [
-            message.recipientId,
             message.senderId,
+            message.recipientId,
           ]);
           logger.info("created conversation - ", conversation);
           const newMessage = await createMessage({

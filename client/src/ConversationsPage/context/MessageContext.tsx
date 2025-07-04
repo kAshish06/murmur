@@ -33,6 +33,7 @@ export const MessageProvider = ({
       try {
         if (conversation) {
           replaceTemporaryConversation(conversation);
+          message.conversationId = conversation?.clientId;
         }
         // Add to status update queue
         queueManager.addToIncomingMessageQueue(message);

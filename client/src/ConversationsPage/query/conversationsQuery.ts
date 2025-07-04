@@ -10,7 +10,10 @@ import { CONVERSATIONS_QUERY_KEY, MESSAGES_QUERY_KEY } from "../queryKeys";
 export function useGetConversations() {
   return useQuery<Conversation[]>({
     queryKey: CONVERSATIONS_QUERY_KEY,
-    queryFn: (): Promise<Conversation[]> => fetchConversation(),
+    queryFn: async (): Promise<Conversation[]> => {
+      const conversations = await fetchConversation();
+      return conversations.map((conv) => ({ ...conv, clientId: conv.id }));
+    },
   });
 }
 

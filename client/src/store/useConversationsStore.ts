@@ -8,9 +8,7 @@ interface ConversationStore {
   setConversations: (conversations: Conversation[]) => void;
   addConversation: (conversation: Conversation) => void;
   updateConversation: (conversationId: number, updatedAt: string) => void;
-  replaceTemporaryConversation: (
-    conversation: Conversation & { oldConversationId?: number }
-  ) => void;
+  replaceTemporaryConversation: (conversation: Conversation) => void;
 }
 
 const useConversationsStore = create<ConversationStore>()(
@@ -32,14 +30,18 @@ const useConversationsStore = create<ConversationStore>()(
           })),
         replaceTemporaryConversation: (conversation) =>
           set((state) => {
-            const existingConversationIndex = state.conversations?.findIndex(
-              (conv) => conv.id === conversation.oldConversationId
-            );
-            delete conversation.oldConversationId;
-            const newConversations = [...state.conversations];
-            newConversations[existingConversationIndex] = conversation;
             return {
-              conversations: newConversations,
+              conversations: state.conversations?.map((conv) => {
+                if (conv.clientId === conversation.clientId) {
+                  const permanentConversation = {
+                    ...conversation,
+                    isTemporary: false,
+                  };
+                  return permanentConversation;
+                }
+
+                return conv;
+              }),
             };
           }),
       }),

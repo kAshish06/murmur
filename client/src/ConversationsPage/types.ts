@@ -6,6 +6,7 @@ export type ConversationParticipant = {
 
 export type Conversation = {
   id: number;
+  clientId: number;
   type: string;
   createdAt: string;
   updatedAt: string;

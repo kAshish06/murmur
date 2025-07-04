@@ -72,7 +72,7 @@ export async function startMessageProcessor() {
         if (conversation) {
           processedMessage.conversation = {
             ...conversation,
-            oldConversationId: message.conversationId,
+            clientId: message.conversationId,
           };
         }
         await rabbitMQ.publish(QUEUE_CONFIG.outgoing.name, processedMessage);

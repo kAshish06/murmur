@@ -46,7 +46,7 @@ export default function ConversationsList({ onConversationSelection }: Props) {
   }, [fetchedConversations, isPending, setConversations]);
 
   const handleConversationClick = (conversation: Conversation) => {
-    setSelectedConversationId(conversation.id);
+    setSelectedConversationId(conversation.clientId);
     onConversationSelection(conversation);
   };
 
@@ -61,8 +61,10 @@ export default function ConversationsList({ onConversationSelection }: Props) {
     if (existingConversation) {
       conversation = existingConversation;
     } else {
+      const currentTime = Date.now();
       conversation = {
-        id: Date.now(),
+        id: currentTime,
+        clientId: currentTime,
         type: "private",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -72,9 +74,9 @@ export default function ConversationsList({ onConversationSelection }: Props) {
       };
       addConversation(conversation);
     }
-    setSelectedConversationId(conversation.id);
+    setSelectedConversationId(conversation.clientId);
     onConversationSelection(conversation);
-    setSearchQuery("");
+    searchUserRef.current?.closeSearch();
   };
 
   if (isPending) return <div>Loading conversations...</div>;
@@ -126,9 +128,9 @@ export default function ConversationsList({ onConversationSelection }: Props) {
       {!searchQuery &&
         storedConversations.map((conversation) => (
           <div
-            key={conversation.id}
+            key={conversation.clientId}
             className={`${
-              selectedConversationId === conversation.id
+              selectedConversationId === conversation.clientId
                 ? "bg-gray-900 text-white hover:bg-black"
                 : "hover:bg-gray-200"
             } px-3 py-3 rounded-lg cursor-pointer transition-colors duration-200`}

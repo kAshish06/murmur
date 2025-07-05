@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { EllipsisVertical, Phone, Video } from "lucide-react";
 import { useGetMessages } from "./query/conversationsQuery";
 import { useMessageContext } from "./context/useMessageContext";
 import { type Conversation } from "./types";
 import useIntersectionObserver from "../hooks/useIntersectionObserver";
-import { useUserPresenceQuery } from "./query/presenceQuery";
 import { ConversationMessage } from "./ConversationMessage";
-
+import { ConversationHeader } from "./ConversationHeader";
 interface ConversationPaneProps {
   selectedConversation: Conversation;
 }
@@ -30,9 +28,6 @@ export default function ConversationPane({
   } = useGetMessages(selectedConversation.id, selectedConversation.isTemporary);
   const { getConversationMessages, setMessagesInStore: setMessages } =
     useMessageContext();
-  const { data: userPresence } = useUserPresenceQuery(
-    selectedConversation.otherParticipants[0].id
-  );
 
   useIntersectionObserver(
     messageStartRef,
@@ -99,23 +94,7 @@ export default function ConversationPane({
   }
   return (
     <div className="flex flex-col justify-between flex-1 overflow-hidden">
-      <div className="flex items-center justify-between p-4 border-b border-gray-100 w-full">
-        <div>
-          <h2 className="text-xl font-semibold text-left bg-black-100">
-            {selectedConversation.otherParticipants[0].username}
-          </h2>
-          {userPresence?.online ? (
-            <div className="text-left text-xs text-neutral-500">Online</div>
-          ) : (
-            <div className="text-left text-xs text-neutral-500">Offline</div>
-          )}
-        </div>
-        <div className="flex gap-4">
-          <Phone size={20} />
-          <Video size={20} />
-          <EllipsisVertical size={20} />
-        </div>
-      </div>
+      <ConversationHeader selectedConversation={selectedConversation} />
       <div className="py-2 px-4 overflow-y-auto space-y-4" ref={containerRef}>
         <div className="h-4" ref={messageStartCallbackRef}></div>
         {messages.map((message) => (

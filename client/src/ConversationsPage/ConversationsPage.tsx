@@ -67,18 +67,12 @@ export default function ConversationsPage() {
         </div>
       )}
       <div className="flex flex-1 overflow-auto">
-        {isMobileView ? (
-          <>
-            {showList && (
-              <div className="w-2/3 border-r border-gray-300">
-                <ConversationsList
-                  onConversationSelection={handleConversationSelection}
-                />
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="w-1/4 border-r border-gray-300">
+        {showList && (
+          <div
+            className={`${
+              isMobileView ? `w-2/3` : `w-1/4`
+            } border-r border-gray-300`}
+          >
             <ConversationsList
               onConversationSelection={handleConversationSelection}
             />

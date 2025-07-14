@@ -128,6 +128,6 @@ export type SocketEventData =
   | SocketErrorData;
 export interface SocketEvent<T> {
   type: "message" | "presence" | "error";
-  data: SocketEventData;
+  data: T;
   recipientIds: number[];
 }

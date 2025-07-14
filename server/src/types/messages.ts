@@ -93,7 +93,7 @@ export const QUEUE_CONFIG: {
 
 export interface SocketMessageData {
   message: {
-    id: string | number;
+    id: number;
     tempId?: string;
     senderId: number;
     conversationId: number;

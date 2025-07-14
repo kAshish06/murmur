@@ -51,6 +51,26 @@ export const createMessage = async (
   }
 };
 
+export const updateMessage = async (
+  id: number,
+  updateSlice: Partial<PrismaMessage>
+): Promise<PrismaMessage> => {
+  try {
+    const updatedMessage = await prisma.message.update({
+      where: {
+        id: id,
+      },
+      data: {
+        ...updateSlice,
+      },
+    });
+    return updatedMessage;
+  } catch (e) {
+    logger.error("Error updating message: ", e);
+    throw e;
+  }
+};
+
 export const findUserConversations = async (userId: number) => {
   return await prisma.userConversation.findMany({
     where: {

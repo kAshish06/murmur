@@ -90,21 +90,24 @@ export default function ConversationsPage() {
             </div>
           )}
           {selectedConversation?.clientId && (
-            <div className="flex flex-col justify-between flex-1 overflow-hidden">
-              <ConversationHeader selectedConversation={selectedConversation} />
-              <ConversationPane
-                selectedConversation={selectedConversation}
-                key={selectedConversation.clientId}
+            <>
+              <div className="flex flex-col justify-between flex-1 overflow-hidden">
+                <ConversationHeader
+                  selectedConversation={selectedConversation}
+                />
+                <ConversationPane
+                  selectedConversation={selectedConversation}
+                  key={selectedConversation.clientId}
+                />
+              </div>
+              <MessageInput
+                onSend={handleSendMessage}
+                disabled={
+                  !socket || !isConnected || !selectedConversation?.clientId
+                }
               />
-            </div>
+            </>
           )}
-
-          <MessageInput
-            onSend={handleSendMessage}
-            disabled={
-              !socket || !isConnected || !selectedConversation?.clientId
-            }
-          />
         </div>
       </div>
     </div>

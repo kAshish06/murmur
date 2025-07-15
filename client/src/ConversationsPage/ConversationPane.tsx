@@ -20,6 +20,7 @@ export default function ConversationPane({
   const [startObserving, setStartObserving] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const containerScrollHeightRef = useRef<number>(0);
+  const isAtBottomRef = useRef(false);
   const {
     data: historicalMessages,
     isPending,
@@ -80,6 +81,18 @@ export default function ConversationPane({
     }
   }, [selectedConversation.id, isPending, historicalMessages, setMessages]);
 
+  useEffect(() => {
+    const containerEl = containerRef.current;
+    if (isAtBottomRef.current && containerEl) {
+      containerEl.scrollTop = containerEl.scrollHeight;
+    }
+  }, [messages]);
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    isAtBottomRef.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < 50;
+  };
   if (!selectedConversation.isTemporary && isPending) {
     return <div>Loading messages ...</div>;
   }
@@ -90,7 +103,11 @@ export default function ConversationPane({
     return <div>This is the start of conversation</div>;
   }
   return (
-    <div className="py-2 px-4 overflow-y-auto space-y-4" ref={containerRef}>
+    <div
+      className="py-2 px-4 overflow-y-auto space-y-4"
+      ref={containerRef}
+      onScroll={handleScroll}
+    >
       <div className="h-4" ref={messageStartCallbackRef}></div>
       {messages.map((message) => (
         <ConversationMessage message={message} key={message.id} />

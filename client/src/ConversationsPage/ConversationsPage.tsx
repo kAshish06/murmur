@@ -8,6 +8,7 @@ import { MessageStatus } from "../types/messageQueue";
 import { MessageInput } from "./MessageInput";
 import useMobileView from "../hooks/useMobileView";
 import useSelectedConversation from "../store/selectors/useSelectedConversation";
+import { ConversationHeader } from "./ConversationHeader";
 
 export default function ConversationsPage() {
   const isMobileView = useMobileView();
@@ -89,10 +90,13 @@ export default function ConversationsPage() {
             </div>
           )}
           {selectedConversation?.clientId && (
-            <ConversationPane
-              selectedConversation={selectedConversation}
-              key={selectedConversation.clientId}
-            />
+            <div className="flex flex-col justify-between flex-1 overflow-hidden">
+              <ConversationHeader selectedConversation={selectedConversation} />
+              <ConversationPane
+                selectedConversation={selectedConversation}
+                key={selectedConversation.clientId}
+              />
+            </div>
           )}
 
           <MessageInput

@@ -4,7 +4,6 @@ import { useMessageContext } from "./context/useMessageContext";
 import { type Conversation } from "./types";
 import useIntersectionObserver from "../hooks/useIntersectionObserver";
 import { ConversationMessage } from "./ConversationMessage";
-import { ConversationHeader } from "./ConversationHeader";
 interface ConversationPaneProps {
   selectedConversation: Conversation;
 }
@@ -54,9 +53,7 @@ export default function ConversationPane({
   const messageEndCallbackRef = useCallback((node: HTMLDivElement | null) => {
     if (node) {
       node.scrollIntoView({ behavior: "auto" });
-      // setTimeout(() => {
       setStartObserving(true);
-      // }, 500);
     }
   }, []);
 
@@ -93,15 +90,12 @@ export default function ConversationPane({
     return <div>This is the start of conversation</div>;
   }
   return (
-    <div className="flex flex-col justify-between flex-1 overflow-hidden">
-      <ConversationHeader selectedConversation={selectedConversation} />
-      <div className="py-2 px-4 overflow-y-auto space-y-4" ref={containerRef}>
-        <div className="h-4" ref={messageStartCallbackRef}></div>
-        {messages.map((message) => (
-          <ConversationMessage message={message} key={message.id} />
-        ))}
-        <div ref={messageEndCallbackRef}></div>
-      </div>
+    <div className="py-2 px-4 overflow-y-auto space-y-4" ref={containerRef}>
+      <div className="h-4" ref={messageStartCallbackRef}></div>
+      {messages.map((message) => (
+        <ConversationMessage message={message} key={message.id} />
+      ))}
+      <div ref={messageEndCallbackRef}></div>
     </div>
   );
 }

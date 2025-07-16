@@ -13,9 +13,7 @@ const PAGE_SIZE = 9;
 export default function ConversationPane({
   selectedConversation,
 }: ConversationPaneProps) {
-  const [messageStartRef, setMessageStartRef] = useState<HTMLDivElement | null>(
-    null
-  );
+  const messageStartRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(1);
   const [startObserving, setStartObserving] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,7 +28,7 @@ export default function ConversationPane({
     useMessageContext();
 
   useIntersectionObserver(
-    messageStartRef,
+    messageStartRef.current,
     (entry: IntersectionObserverEntry) => {
       if (entry.isIntersecting && entry.intersectionRatio > 0) {
         console.log("intersecting");
@@ -44,12 +42,6 @@ export default function ConversationPane({
     containerRef.current,
     startObserving
   );
-
-  const messageStartCallbackRef = useCallback((node: HTMLDivElement | null) => {
-    if (node) {
-      setMessageStartRef(node);
-    }
-  }, []);
 
   const messageEndCallbackRef = useCallback((node: HTMLDivElement | null) => {
     if (node) {
@@ -108,7 +100,7 @@ export default function ConversationPane({
       ref={containerRef}
       onScroll={handleScroll}
     >
-      <div className="h-4" ref={messageStartCallbackRef}></div>
+      <div className="h-4" ref={messageStartRef}></div>
       {messages.map((message) => (
         <ConversationMessage message={message} key={message.id} />
       ))}

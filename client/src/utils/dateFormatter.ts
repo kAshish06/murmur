@@ -12,7 +12,7 @@ export const getDateString = (dateString: string) => {
     return `${formatDatePart(date.getHours())}:${formatDatePart(
       date.getMinutes()
     )}`;
-  } else if (diffInDays > 1 && diffInDays < 2) {
+  } else if (diffInDays == 1) {
     return DAY.YESTERDAY;
   }
   return date.toLocaleDateString();

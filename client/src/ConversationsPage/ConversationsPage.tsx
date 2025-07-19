@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { Menu } from "lucide-react";
-import ConversationsList from "./ConversationsList";
+import ConversationsListWithUserSearch from "./ConversationsListWithUserSearch";
 import ConversationPane from "./ConversationPane";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMessageContext } from "./context/useMessageContext";
@@ -74,7 +74,7 @@ export default function ConversationsPage() {
               isMobileView ? `w-2/3` : `w-1/4`
             } border-r border-gray-300`}
           >
-            <ConversationsList
+            <ConversationsListWithUserSearch
               onConversationSelection={handleConversationSelection}
             />
           </div>
